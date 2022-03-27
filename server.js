@@ -1,3 +1,9 @@
+if(process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
+
+const Conn = require('./conn/conn');
+
 var express = require("express");
 var app = express();
 const bcrypt = require('bcrypt');
@@ -6,8 +12,7 @@ var cors = require('cors');
 var multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
-var mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost/productDB");
+
 var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
@@ -367,6 +372,14 @@ app.get("/get-product", (req, res) => {
 
 });
 
-app.listen(2000, () => {
-  console.log("Server is Runing On port 2000");
-});
+const db_url = process.env.DB_URL;
+const db_user = process.env.DB_USER;
+const db_pass = process.env.DB_PASS;
+const db_data = process.env.DB_DATA;
+Conn(db_url, db_user, db_pass, db_data);
+
+// inicializar o servidor http em alguma porta para podermos acessar ele.
+const port = 3001;
+app.listen(process.env.PORT || port, () => {
+  console.log(`O servidor esta rodando na porta ${port}`);
+})
