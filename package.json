@@ -1,34 +1,25 @@
 {
-  "name": "backtestmar",
+  "name": "backend",
   "version": "1.0.0",
-  "description": "backtestmar",
-  "main": "index.js",
+  "description": "Api for product",
+  "main": "server.js",
   "scripts": {
-    "start": "node index",
-    "dev": "nodemon index",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/uesleiMF/ProjetoBackend.git"
-  },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "movie"
+  ],
+  "author": "ues",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/uesleiMF/ProjetoBackend/issues"
-  },
-  "homepage": "https://github.com/uesleiMF/ProjetoBackend#readme",
-  "devDependencies": {
-    "nodemon": "^2.0.15"
-  },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "imdb-api": "^4.4.1",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.0.14",
-    "multer": "^1.4.4"
+    "jwt-decode": "^3.1.2",
+    "mongoose": "^5.11.7",
+    "multer": "^1.4.2"
   }
 }
