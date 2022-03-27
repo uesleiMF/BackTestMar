@@ -19,8 +19,10 @@ app.use(express.json());
 // chamo outro middleware para interceptar as chamadas e garantir que cors esta correto
 app.use(cors());
 
+
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
+
 var multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
@@ -383,9 +385,6 @@ app.get("/get-product", (req, res) => {
   }
 
 });
-
-// executando a minha funcao de conexao com o banco criado no arquivo conn.js
-
 // buscando os dados da variavel de ambiente
 const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
@@ -398,5 +397,3 @@ const port = 3001;
 app.listen(process.env.PORT || port, () => {
   console.log(`O servidor esta rodando na porta ${port}`);
 })
-
-
