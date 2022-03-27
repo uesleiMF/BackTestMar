@@ -1,7 +1,7 @@
 {
-  "name": "projetobackend",
+  "name": "backtestmar",
   "version": "1.0.0",
-  "description": "projeto backend",
+  "description": "backtestmar",
   "main": "index.js",
   "scripts": {
     "start": "node index",
