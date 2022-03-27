@@ -2,26 +2,13 @@ if(process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 // importar o express para criar o nosso servidor http (web)
-const express = require('express');
-// importar o cors para impedir problema de recursos distintos (urls externas acessando o nosso backend)
-const cors  = require('cors');
-// importar as nossas rotas da musica
-
-// importar a minha funcao de conexao com o banco
 const Conn = require('./conn/conn');
 
-// inicializar o express e atribuir em uma constante
-const app = express();
-
-// chamo um midleware(faz a ponte entre a entrada e saida do backend)
-// para falar pro express trabalhar com o formato JSON
-app.use(express.json());
-// chamo outro middleware para interceptar as chamadas e garantir que cors esta correto
-app.use(cors());
-
+var express = require("express");
+var app = express();
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
-
+var cors = require('cors');
 var multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
@@ -384,13 +371,6 @@ app.get("/get-product", (req, res) => {
   }
 
 });
-
-// configuro um middleware para interceptar as chamadas para a rota /musicas
-// e enviar para o nosso arquivo de rotas
-
-// executando a minha funcao de conexao com o banco criado no arquivo conn.js
-
-// buscando os dados da variavel de ambiente
 const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
 const db_pass = process.env.DB_PASS;
