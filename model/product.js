@@ -4,9 +4,9 @@ var Schema = mongoose.Schema;
 productSchema = new Schema( {
 	name: String,
 	desc: String,
-	price: Number,
+	tel: Number,
 	image: String,
-	discount: Number,
+	cargo: String,
 	user_id: Schema.ObjectId,
 	is_delete: { type: Boolean, default: false },
 	date : { type : Date, default: Date.now }
