@@ -7,7 +7,8 @@ productSchema = new Schema( {
 	tel: Number,
 	image: String,
 	cargo: String,
-	user_id: Schema.ObjectId,
+	dataAni: String,
+   	user_id: Schema.ObjectId,
 	is_delete: { type: Boolean, default: false },
 	date : { type : Date, default: Date.now }
 }),

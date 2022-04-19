@@ -189,7 +189,7 @@ function checkUserAndGenerateToken(data, req, res) {
 app.post("/add-product", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.tel &&
-      req.body.cargo) {
+      req.body.cargo && req.body.dataAni) {
 
       let new_product = new product();
       new_product.name = req.body.name;
@@ -198,6 +198,7 @@ app.post("/add-product", upload.any(), (req, res) => {
       new_product.image = req.files[0].filename;
       new_product.cargo = req.body.cargo;
       new_product.user_id = req.user.id;
+      new_product.dataAni= req.body.dataAni;
       new_product.save((err, data) => {
         if (err) {
           res.status(400).json({
@@ -230,7 +231,7 @@ app.post("/add-product", upload.any(), (req, res) => {
 app.post("/update-product", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.tel &&
-      req.body.id && req.body.cargo) {
+      req.body.id && req.body.cargo && req.body.dataAni) {
 
       product.findById(req.body.id, (err, new_product) => {
 
@@ -255,6 +256,12 @@ app.post("/update-product", upload.any(), (req, res) => {
         if (req.body.cargo) {
           new_product.cargo = req.body.cargo;
         }
+          if (req.body.cargo) {
+         new_product.dataAni= req.body.dataAni;
+        }
+
+
+   
 
         new_product.save((err, data) => {
           if (err) {
@@ -333,7 +340,7 @@ app.get("/get-product", (req, res) => {
     }
     var perPage = 5;
     var page = req.query.page || 1;
-    product.find(query, { date: 1, name: 1, id: 1, desc: 1, tel: 1, cargo: 1, image: 1 })
+    product.find(query, { date: 1, name: 1, id: 1, desc: 1, tel: 1, cargo: 1, image: 1, dataAni: 1})
       .skip((perPage * page) - perPage).limit(perPage)
       .then((data) => {
         product.find(query).count()
