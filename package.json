@@ -5,7 +5,6 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-   
     "start": "node server.js"
   },
   "keywords": [
@@ -14,6 +13,7 @@
   "author": "ues",
   "license": "ISC",
   "dependencies": {
+    "@mapbox/node-pre-gyp": "^1.0.9",
     "bcrypt": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
@@ -23,7 +23,6 @@
     "mongoose": "^5.11.7",
     "multer": "^1.4.2"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/uesleiMF/BackTestMar.git"
