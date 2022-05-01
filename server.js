@@ -4,8 +4,8 @@ if(process.env.NODE_ENV !== 'production') {
 
 const Conn = require('./conn/conn');
 
-var express = require("express");
-var app = express();
+const express = require("express");
+const app = express();
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
