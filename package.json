@@ -4,11 +4,10 @@
   "description": "Api for product",
   "main": "server.js",
   "scripts": {
-  "start": "node server.js",
-  "build": "react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject"
-    
+    "start": "node server.js",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "keywords": [
     "movie"
@@ -36,4 +35,3 @@
   },
   "homepage": "https://github.com/uesleiMF/BackTestMar#readme"
 }
-
