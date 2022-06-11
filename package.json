@@ -1,8 +1,11 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "Api for product",
-  "main": "server.js",
+  
+    "name": "backtestmar",
+    "description": "app",
+    "version": "1.0.0",
+    "engines": {
+      "node": "17.x"
+    },
   "scripts": {
     "start": "node server.js",
     "build": "react-scripts build",
