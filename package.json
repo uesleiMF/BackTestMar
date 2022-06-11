@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Api for product",
   "main": "server.js",
-  
   "scripts": {
     "start": "node server.js",
     "build": "react-scripts build",
