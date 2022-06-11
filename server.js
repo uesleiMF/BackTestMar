@@ -189,17 +189,16 @@ function checkUserAndGenerateToken(data, req, res) {
 /* Api to add Product */
 app.post("/add-product", upload.any(), (req, res) => {
   try {
-    if (req.files && req.body && req.body.name && req.body.desc && req.body.tel &&
-      req.body.cargo && req.body.dataAni) {
+    if (req.files && req.body && req.body.name && req.body.desc && req.body.price &&
+      req.body.discount) {
 
       let new_product = new product();
       new_product.name = req.body.name;
       new_product.desc = req.body.desc;
-      new_product.tel = req.body.tel;
+      new_product.price = req.body.price;
       new_product.image = req.files[0].filename;
-      new_product.cargo = req.body.cargo;
+      new_product.discount = req.body.discount;
       new_product.user_id = req.user.id;
-      new_product.dataAni= req.body.dataAni;
       new_product.save((err, data) => {
         if (err) {
           res.status(400).json({
@@ -209,7 +208,7 @@ app.post("/add-product", upload.any(), (req, res) => {
         } else {
           res.status(200).json({
             status: true,
-            title: 'Casal Adicionado com sucesso.'
+            title: 'Product Added successfully.'
           });
         }
       });
@@ -231,8 +230,8 @@ app.post("/add-product", upload.any(), (req, res) => {
 /* Api to update Product */
 app.post("/update-product", upload.any(), (req, res) => {
   try {
-    if (req.files && req.body && req.body.name && req.body.desc && req.body.tel &&
-      req.body.id && req.body.cargo && req.body.dataAni) {
+    if (req.files && req.body && req.body.name && req.body.desc && req.body.price &&
+      req.body.id && req.body.discount) {
 
       product.findById(req.body.id, (err, new_product) => {
 
@@ -251,18 +250,12 @@ app.post("/update-product", upload.any(), (req, res) => {
         if (req.body.desc) {
           new_product.desc = req.body.desc;
         }
-        if (req.body.tel) {
-          new_product.tel = req.body.tel;
+        if (req.body.price) {
+          new_product.price = req.body.price;
         }
-        if (req.body.cargo) {
-          new_product.cargo = req.body.cargo;
+        if (req.body.discount) {
+          new_product.discount = req.body.discount;
         }
-          if (req.body.cargo) {
-         new_product.dataAni= req.body.dataAni;
-        }
-
-
-   
 
         new_product.save((err, data) => {
           if (err) {
@@ -273,7 +266,7 @@ app.post("/update-product", upload.any(), (req, res) => {
           } else {
             res.status(200).json({
               status: true,
-              title: 'Casal Adicionado.'
+              title: 'Product updated.'
             });
           }
         });
@@ -302,7 +295,7 @@ app.post("/delete-product", (req, res) => {
         if (data.is_delete) {
           res.status(200).json({
             status: true,
-            title: 'Casal Deletado.'
+            title: 'Product deleted.'
           });
         } else {
           res.status(400).json({
@@ -341,7 +334,7 @@ app.get("/get-product", (req, res) => {
     }
     var perPage = 5;
     var page = req.query.page || 1;
-    product.find(query, { date: 1, name: 1, id: 1, desc: 1, tel: 1, cargo: 1, image: 1, dataAni: 1})
+    product.find(query, { date: 1, name: 1, id: 1, desc: 1, price: 1, discount: 1, image: 1 })
       .skip((perPage * page) - perPage).limit(perPage)
       .then((data) => {
         product.find(query).count()
@@ -350,7 +343,7 @@ app.get("/get-product", (req, res) => {
             if (data && data.length > 0) {
               res.status(200).json({
                 status: true,
-                title: 'Casal retrived.',
+                title: 'Product retrived.',
                 products: data,
                 current_page: page,
                 total: count,
@@ -358,7 +351,7 @@ app.get("/get-product", (req, res) => {
               });
             } else {
               res.status(400).json({
-                errorMessage: 'There is no Casal!',
+                errorMessage: 'There is no product!',
                 status: false
               });
             }
@@ -379,6 +372,7 @@ app.get("/get-product", (req, res) => {
   }
 
 });
+
 
 const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
