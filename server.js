@@ -12,7 +12,7 @@ var cors = require('cors');
 var multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
-
+  var mongoose = require("mongoose");
 var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
