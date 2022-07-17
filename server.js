@@ -57,11 +57,11 @@ app.use("/", (req, res, next) => {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
-        } else {
-          return res.status(401).json({
-            errorMessage: 'User unauthorized!',
-            status: true
-                      });
+        //} else {
+          //return res.status(401).json({
+          //  errorMessage: 'User unauthorized!',
+//status: true
+                     // });
         }
       })
     }
