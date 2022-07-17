@@ -60,7 +60,7 @@ app.use("/", (req, res, next) => {
         } else {
           return res.status(401).json({
             errorMessage: 'User unauthorized!',
-            status: true
+            status: false
           });
         }
       })
