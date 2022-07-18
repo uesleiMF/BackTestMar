@@ -170,7 +170,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '1d' }, (err, token) => {
+  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '3d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
