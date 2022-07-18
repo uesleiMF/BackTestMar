@@ -170,7 +170,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '3d' }, (err, token) => {
+  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '1d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
@@ -378,7 +378,7 @@ const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
 const db_pass = process.env.DB_PASS;
 const db_data = process.env.DB_DATA;
-Conn(db_url, db_user, db_pass, db_data);
+Conn(db_url, db_user, db_pass, db_data,);
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
 const port = 3001;
