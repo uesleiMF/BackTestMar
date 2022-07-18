@@ -7,18 +7,18 @@ const Conn = require('./conn/conn');
 const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
-//var jwt = require('jsonwebtoken');
-var cors = require('cors');
-var multer = require('multer'),
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
-  var mongoose = require("mongoose");
-var fs = require('fs');
-var product = require("./model/product.js");
-var user = require("./model/user.js");
+const mongoose = require("mongoose");
+const fs = require('fs');
+const product = require("./model/product.js");
+const user = require("./model/user.js");
 
-var dir = './uploads';
-var upload = multer({
+const dir = './uploads';
+const upload = multer({
   storage: multer.diskStorage({
 
     destination: function (req, file, callback) {
