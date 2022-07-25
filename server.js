@@ -49,7 +49,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path == "/login" || req.path == "/register" || req.path == "/" || req.path =="/update-product") {
+    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
       next();
     } else {
       /* decode jwt token if authorized*/
