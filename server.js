@@ -41,7 +41,6 @@ const upload = multer({
 });
 app.use(cors());
 app.use(express.static('uploads'));
-app.use (express.json({extended: false}));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: false
@@ -92,14 +91,14 @@ app.post("/login", (req, res) => {
           } else {
 
             res.status(400).json({
-              errorMessage: 'nome ou senha estão incorretas!',
+              errorMessage: 'Username or password is incorrect!',
               status: false
             });
           }
 
         } else {
           res.status(400).json({
-            errorMessage: 'nome ou senha estão incorretas!',
+            errorMessage: 'Username or password is incorrect!',
             status: false
           });
         }
@@ -141,7 +140,7 @@ app.post("/register", (req, res) => {
             } else {
               res.status(200).json({
                 status: true,
-                title: 'Usuario registrado com sucesso.'
+                title: 'Registered Successfully.'
               });
             }
           });
