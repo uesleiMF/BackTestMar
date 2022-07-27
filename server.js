@@ -1,4 +1,4 @@
-Oiif(process.env.NODE_ENV !== 'production') {
+if(process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 
@@ -33,7 +33,7 @@ const upload = multer({
 
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname)
-    if (ext !=== '.png' && ext !=== '.jpg' && ext !=== '.jpeg') {
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
       return callback(/*res.end('Only images are allowed')*/ null, false)
     }
     callback(null, true)
