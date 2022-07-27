@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV !== 'production') {
+Oiif(process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 
@@ -33,7 +33,7 @@ const upload = multer({
 
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname)
-    if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+    if (ext !=== '.png' && ext !=== '.jpg' && ext !=== '.jpeg') {
       return callback(/*res.end('Only images are allowed')*/ null, false)
     }
     callback(null, true)
@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
+    if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
     } else {
       /* decode jwt token if authorized*/
