@@ -7,7 +7,7 @@ const Conn = require('./conn/conn');
 const express = require("express");
 const app = express();
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+//const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const multer = require('multer'),
   bodyParser = require('body-parser'),
@@ -50,7 +50,7 @@ app.use("/", (req, res, next) => {
   try {
     if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
-    } else {
+    /*} else {
       /* decode jwt token if authorized*/
       jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
         if (decoded && decoded.user) {
@@ -71,7 +71,7 @@ app.use("/", (req, res, next) => {
     });
   }
 })
-
+*/
 app.get("/", (req, res) => {
   res.status(200).json({
     status: true,
