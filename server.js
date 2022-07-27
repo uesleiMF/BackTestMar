@@ -52,25 +52,25 @@ app.use("/", (req, res, next) => {
       next();
     /*} else {
       /* decode jwt token if authorized*/
-      jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
-        if (decoded && decoded.user) {
-          req.user = decoded;
-          next();
-        } else {
-          return res.status(401).json({
-            errorMessage: 'User unauthorized!',
-            status: false
-          });
-        }
-      })
-    }
-  } catch (e) {
-    res.status(400).json({
-      errorMessage: 'Something went wrong!',
-      status: false
-    });
-  }
-})
+      /*jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
+       /* if (decoded && decoded.user) {
+        /*  req.user = decoded;
+        /*  next();
+     /*   } else {
+         /* return res.status(401).json({
+          /*  errorMessage: 'User unauthorized!',
+          /*  status: false
+         /* });
+       /* }
+     /* })
+  /*  }
+  /*} catch (e) {
+   /* res.status(400).json({
+    /*  errorMessage: 'Something went wrong!',
+    /*  status: false
+   /* });
+  /*}
+/*})
 */
 app.get("/", (req, res) => {
   res.status(200).json({
