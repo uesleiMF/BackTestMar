@@ -48,28 +48,29 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path === "/login" || req.path === "/register" || req.path === "/") {
+    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
       next();
     } else {
-      decode jwt token if authorized*/
+      /* decode jwt token if authorized*/
       jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
-       if (decoded && decoded.user) {
-        req.user = decoded;
-         next();
-       } else {
-         return res.status(401).json({
-           errorMessage: 'User unauthorized!',
-           status: false
-         });
-       }
-     })
-   }
+        if (decoded && decoded.user) {
+          req.user = decoded;
+          next();
+        } else {
+          return res.status(401).json({
+            errorMessage: 'User unauthorized!',
+            status: false
+          });
+        }
+      })
+    }
   } catch (e) {
-   res.status(400).json({
-     errorMessage: 'Something went wrong!',
-     status: false
-   });
-  }})
+    res.status(400).json({
+      errorMessage: 'Something went wrong!',
+      status: false
+    });
+  }
+})
 
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -378,7 +379,7 @@ const db_pass = process.env.DB_PASS;
 const db_data = process.env.DB_DATA;
 const db_jwt = process.env.DB_JWT;
 
-Conn(db_url, db_user, db_pass, db_data, db_jwt,);
+Conn(db_url, db_user, db_pass, db_data, db_jwt);
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
 const port = 3001;
