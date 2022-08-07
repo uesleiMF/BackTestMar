@@ -8,10 +8,12 @@ const Conn = (url, user, pass, data, jwt) => {
   // useNewUrlParser = fala pro mongo usar o novo sistema de urls
   // useUnifiedTopology = mecanismo de monitoramento do banco de dados
   mongoose.connect(`${url}/${data}`,{
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: false,
+      user: user,
+      pass: pass,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
     }
   ).then(() => {
     console.log('Conexao com o MongoDB executada com sucesso');
