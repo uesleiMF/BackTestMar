@@ -52,7 +52,7 @@ app.use("/", (req, res, next) => {
       next();
     } else {
       /* decode jwt token if authorized*/
-      jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
+      const token = jwt.verify(req.headers.token, process.env.JWTPRIVATEKEY, function (err, decoded) {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
@@ -169,7 +169,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '1h' }, (err, token) => {
+  const token=jwt.sign({ user: data.username, id: data._id }, process.env.JWTPRIVATEKEY, { expiresIn: '1h' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
@@ -377,9 +377,9 @@ const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
 const db_pass = process.env.DB_PASS;
 const db_data = process.env.DB_DATA;
-const db_jwt = process.env.DB_JWT;
 
-Conn(db_url, db_user, db_pass, db_data, db_jwt);
+
+Conn(db_url, db_user, db_pass, db_data);
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
 const port = 3001;
