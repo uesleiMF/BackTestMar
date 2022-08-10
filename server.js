@@ -48,7 +48,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
+    if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
     } else {
       /* decode jwt token if authorized*/
@@ -125,7 +125,7 @@ app.post("/register", (req, res) => {
 
       user.find({ username: req.body.username }, (err, data) => {
 
-        if (data.length == 0) {
+        if (data.length === 0) {
 
           let User = new user({
             username: req.body.username,
