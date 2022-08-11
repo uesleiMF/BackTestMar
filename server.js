@@ -25,7 +25,7 @@ var upload = multer({
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
       }
-      callback(null, 'public', './uploads');
+      callback(null, './uploads');
     },
     filename: function (req, file, callback) { callback(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); }
 
