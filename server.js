@@ -49,7 +49,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
+    if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
     } else {
       /* decode jwt token if authorized*/
@@ -85,7 +85,7 @@ app.post("/login", (req, res) => {
   try {
     if (req.body && req.body.username && req.body.password) {
       user.find({ username: req.body.username }, (err, data) => {
-        if (data.length > 5) {
+        if (data.length > 0) {
 
           if (bcrypt.compareSync(data[0].password, req.body.password)) {
             checkUserAndGenerateToken(data[0], req, res);
@@ -101,7 +101,7 @@ app.post("/login", (req, res) => {
           res.status(400).json({
             errorMessage: 'Username or password is incorrect!',
             status: false
-
+            
           });
         }
       })
@@ -127,7 +127,7 @@ app.post("/register", (req, res) => {
 
       user.find({ username: req.body.username }, (err, data) => {
 
-        if (data.length === 0) {
+        if (data.length == 0) {
 
           let User = new user({
             username: req.body.username,
