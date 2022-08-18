@@ -7,7 +7,7 @@ var cookieParser = require('cookie-parser');
 var express = require("express");
 var app = express();
 const bcrypt = require('bcrypt');
-var jwt = require('jsonwebtoken');
+//var jwt = require('jsonwebtoken');
 var cors = require('cors');
 var multer = require('multer'),
   bodyParser = require('body-parser'),
@@ -44,11 +44,9 @@ app.use(cors());
 app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(cookieParser());  
-app.use(bodyParser.urlencoded({ extended: true })); 
-   
- //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  // extended: false
-//}));
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+extended: false
+}));
 
 app.use("/", (req, res, next) => {
   try {
