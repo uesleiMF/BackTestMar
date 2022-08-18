@@ -3,17 +3,15 @@ if(process.env.NODE_ENV !== 'production') {
 }
 
 const Conn = require('./conn/conn');
-var cookieParser = require('cookie-parser');
 var express = require("express");
 var app = express();
 const bcrypt = require('bcrypt');
-// var jwt = require('jsonwebtoken');
+var jwt = require('jsonwebtoken');
 var cors = require('cors');
 var multer = require('multer'),
   bodyParser = require('body-parser'),
   path = require('path');
 var mongoose = require("mongoose");
-
 var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
@@ -43,19 +41,29 @@ var upload = multer({
 app.use(cors());
 app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(cookieParser());  
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-extended: false
+  extended: false
 }));
 
 app.use("/", (req, res, next) => {
   try {
-    if (req.path === "/login" || req.path === "/register" || req.path === "/") {
+    if (req.path == "/login" || req.path == "/register" || req.path == "/") {
       next();
-   
-      }
-    
-    }catch (e) {
+    } else {
+      /* decode jwt token if authorized*/
+           jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
+        if (decoded && decoded.user) {
+          req.user = decoded;
+          next();
+        } else {
+          return res.status(401).json({
+            errorMessage: 'User unauthorized!',
+            status: false
+          });
+        }
+      })
+    }
+  } catch (e) {
     res.status(400).json({
       errorMessage: 'Something went wrong!',
       status: false
@@ -91,7 +99,6 @@ app.post("/login", (req, res) => {
           res.status(400).json({
             errorMessage: 'Username or password is incorrect!',
             status: false
-            
           });
         }
       })
@@ -160,6 +167,8 @@ app.post("/register", (req, res) => {
   }
 });
 
+function checkUserAndGenerateToken(data, req, res) {
+  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '1d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
@@ -168,10 +177,12 @@ app.post("/register", (req, res) => {
     } else {
       res.json({
         message: 'Login Successfully.',
+        token: token,
         status: true
       });
     }
-
+  });
+}
 
 /* Api to add Product */
 app.post("/add-product", upload.any(), (req, res) => {
