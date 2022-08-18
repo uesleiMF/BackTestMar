@@ -3,7 +3,7 @@ if(process.env.NODE_ENV !== 'production') {
 }
 
 const Conn = require('./conn/conn');
-
+var cookieParser = require('cookie-parser');
 var express = require("express");
 var app = express();
 const bcrypt = require('bcrypt');
@@ -43,9 +43,16 @@ var upload = multer({
 app.use(cors());
 app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  extended: false
-}));
+app.use(cookieParser());  
+app.use(bodyParser.urlencoded({ extended: true })); 
+  
+
+ 
+ //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+ 
+ 
+ // extended: false
+//}));
 
 app.use("/", (req, res, next) => {
   try {

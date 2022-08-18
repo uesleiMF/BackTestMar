@@ -1,11 +1,10 @@
 {
-  
-    "name": "backtestmar",
-    "description": "app",
-    "version": "1.0.0",
-    "engines": {
-      "node": "17.x"
-    },
+  "name": "backtestmar",
+  "description": "app",
+  "version": "1.0.0",
+  "engines": {
+    "node": "17.x"
+  },
   "scripts": {
     "start": "node server.js",
     "test": "react-scripts test",
@@ -19,6 +18,7 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^1.0.9",
     "bcrypt": "^5.0.0",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "imdb-api": "^4.4.1",
