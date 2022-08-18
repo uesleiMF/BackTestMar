@@ -45,34 +45,19 @@ app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(cookieParser());  
 app.use(bodyParser.urlencoded({ extended: true })); 
-  
-
- 
+   
  //app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
- 
- 
- // extended: false
+  // extended: false
 //}));
 
 app.use("/", (req, res, next) => {
   try {
     if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
-    } else {
-      /* decode jwt token if authorized*/
-      jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
-        if (decoded && decoded.user) {
-          req.user = decoded;
-          next();
-        } else {
-          return res.status(401).json({
-            errorMessage: 'User unauthorized!',
-            status: false
-          });
-        }
-      })
-    }
-  } catch (e) {
+   
+      }
+    
+    }catch (e) {
     res.status(400).json({
       errorMessage: 'Something went wrong!',
       status: false
@@ -177,8 +162,6 @@ app.post("/register", (req, res) => {
   }
 });
 
-function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, 'shhhhh11111', { expiresIn: '1d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
@@ -187,12 +170,10 @@ function checkUserAndGenerateToken(data, req, res) {
     } else {
       res.json({
         message: 'Login Successfully.',
-        token: token,
         status: true
       });
     }
-  });
-}
+
 
 /* Api to add Product */
 app.post("/add-product", upload.any(), (req, res) => {
