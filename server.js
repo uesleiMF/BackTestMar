@@ -51,13 +51,13 @@ app.use("/", (req, res, next) => {
   try {
     if (req.path === "/login" || req.path === "/register" || req.path === "/") {
       next();
-    } else {
+   } else {
       /* decode jwt token if authorized*/
       jwt.verify(req.headers.token, 'shhhhh11111', function (err, decoded) {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
-        } else {
+        //} else {
           return res.status(401).json({
             errorMessage: 'User unauthorized!',
             status: false
@@ -180,7 +180,7 @@ function checkUserAndGenerateToken(data, req, res) {
     } else {
       res.json({
         message: 'Login Successfully.',
-        token: token,
+        //token: token,
         status: true
       });
     }
