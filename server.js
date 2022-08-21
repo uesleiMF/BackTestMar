@@ -16,7 +16,8 @@ var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
 
-app.use(express.static('./uploads'));
+const parser = multer({ dest: './uploads' });
+
 var dir = './uploads';
 var upload = multer({
   storage: multer.diskStorage({
