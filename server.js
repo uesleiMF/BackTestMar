@@ -16,7 +16,6 @@ var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
 
-const parser = multer({ dest: './uploads' });
 
 var dir = './uploads';
 var upload = multer({
@@ -41,7 +40,7 @@ var upload = multer({
   }
 });
 app.use(cors());
-app.use(express.static('./uploads'));
+app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: false
