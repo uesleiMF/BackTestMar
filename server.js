@@ -384,7 +384,7 @@ Conn(db_url, db_user, db_pass, db_data);*/
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
 
-const MongoDBURI = process.env.MONGO_URI || 'mongodb://localhost:27017/ManualAuth';
+const MongoDBURI = process.env.MONGO_URI;
 
 mongoose.connect(MongoDBURI, {
   useUnifiedTopology:true,
