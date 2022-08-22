@@ -2,7 +2,7 @@ if(process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 
-const Conn = require('./conn/conn');
+//const Conn = require('./conn/conn');
 var express = require("express");
 var app = express();
 const bcrypt = require('bcrypt');
@@ -374,16 +374,31 @@ app.get("/get-product", (req, res) => {
 
 
 
-const db_url = process.env.DB_URL;
+/*const db_url = process.env.DB_URL;
 const db_user = process.env.DB_USER;
 const db_pass = process.env.DB_PASS;
 const db_data = process.env.DB_DATA;
 
 
-Conn(db_url, db_user, db_pass, db_data);
+Conn(db_url, db_user, db_pass, db_data);*/
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
-const port = 2000;
-app.listen(process.env.PORT || port, () => {
-  console.log(`O servidor esta rodando na porta ${port}`);
-})
+
+const MongoDBURI = process.env.MONGO_URI || 'mongodb://localhost:27017/ManualAuth';
+
+mongoose.connect(MongoDBURI, {
+  useUnifiedTopology:true,
+    useNewUrlParser:true,
+    useFindAndModify:false
+},function (err){
+    if(err){
+        console.log(err)
+    }else{
+        console.log('MongoDB CONECTADO com sucesso!')
+    }
+});
+
+
+app.listen(2000, () => {
+  console.log("Server is Runing On port 2000");
+});
