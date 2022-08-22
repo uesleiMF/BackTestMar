@@ -54,7 +54,7 @@ app.use("/", (req, res, next) => {
     } else {
       /* decode jwt token if authorized*/
 
-           jwt.verify(req.headers.token, 'shhhh1111 , function (err, decoded) {
+           jwt.verify(req.headers.token, 'shhhh1111', function (err, decoded) {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
