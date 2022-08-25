@@ -54,7 +54,7 @@ app.use("/", (req, res, next) => {
     } else {
       /* decode jwt token if authorized*/
 
-           jwt.verify(req.headers.token, env.JWT_SECRET, function (err, decoded) {
+           jwt.verify(req.headers.token, 'env.JWT_SECRET', function (err, decoded) {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
@@ -84,7 +84,6 @@ app.get("/", (req, res) => {
 /* login api */
 app.post("/login", (req, res) => {
   try {
-    
     if (req.body && req.body.username && req.body.password) {
       user.find({ username: req.body.username }, (err, data) => {
         if (data.length > 0) {
@@ -172,7 +171,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, env.JWT_SECRET, { expiresIn: '1d' }, (err, token) => {
+  jwt.sign({ user: data.username, id: data._id }, 'env.JWT_SECRET', { expiresIn: '1d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
