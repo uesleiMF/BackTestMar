@@ -85,7 +85,7 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   try {
     
-    if (req.body && req.body.username==='sol' && req.body.password==='123') {
+    if (req.body && req.body.username && req.body.password) {
       user.find({ username: req.body.username }, (err, data) => {
         if (data.length > 0) {
 
