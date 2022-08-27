@@ -385,7 +385,7 @@ const db_data = process.env.DB_DATA;
 Conn(db_url, db_user, db_pass, db_data);
 
 // inicializar o servidor http em alguma porta para podermos acessar ele.
-const port = 3001;
+const port = 2000;
 app.listen(process.env.PORT || port, () => {
   console.log(`O servidor esta rodando na porta ${port}`);
 })
