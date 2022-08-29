@@ -41,11 +41,20 @@ var upload = multer({
   }
 });
 app.use(cors());
-app.use(express.static('uploads'));
+//app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  extended: false
-}));
+//app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+ // extended: true
+//}));
+
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads",express.static(path.resolve(__dirname, "uploads"))
+);
+
+
+
+
+
 
 app.use("/", (req, res, next) => {
   try {
