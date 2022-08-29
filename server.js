@@ -48,7 +48,8 @@ app.use(bodyParser.json());       // to support JSON-encoded bodies
 //}));
 
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads",express.static(path.resolve(__dirname, "uploads"))
+app.use("/uploads",
+express.static(path.resolve(__dirname, "uploads"))
 );
 
 
