@@ -60,7 +60,7 @@ app.use("/", (req, res, next) => {
     } else {
       /* decode jwt token if authorized*/
 
-           jwt.verify(req.headers.token, 'env.JWT_SECRET', function (err, decoded) {
+           jwt.verify(req.headers.token, 'shhhh1111', function (err, decoded) {
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
@@ -177,7 +177,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  jwt.sign({ user: data.username, id: data._id }, 'env.JWT_SECRET', { expiresIn: '1d' }, (err, token) => {
+  jwt.sign({ user: data.username, id: data._id }, 'shhhh1111', { expiresIn: '3d' }, (err, token) => {
     if (err) {
       res.status(400).json({
         status: false,
