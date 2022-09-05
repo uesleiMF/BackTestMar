@@ -40,12 +40,12 @@ var upload = multer({
     callback(null, true)
   }
 });
+
 app.use(cors());
 app.use(express.static('uploads'));
-app.use(bodyParser.json());       // to support JSON-encoded bodies
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-extended: false
-}));
+app.use(bodyParser.json({ limit: '30mb', extended: true }))
+app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }));
+
 
 
 app.use("/", (req, res, next) => {
@@ -172,7 +172,7 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
-  
+
   jwt.sign({ user: data.username, id: data._id },secret, { expiresIn: '1d' }, (err, token) => {
      if (err) {
       res.status(400).json({
