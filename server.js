@@ -44,7 +44,11 @@ app.use(cors());
 app.use(express.static('uploads'));
 app.use(bodyParser.json());       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+<<<<<<< HEAD
   extended: false
+=======
+extended: true
+>>>>>>> b6ef3290862b3b33c36590c4e11de83aca5f7388
 }));
 
 
@@ -60,7 +64,11 @@ app.use("/", (req, res, next) => {
     } else {
       /* decode jwt token if authorized*/
 
+<<<<<<< HEAD
            jwt.verify(req.headers.token,secret, function (err, decoded) {
+=======
+           jwt.verify(req.headers.token, 'shhhh1111', function (err, decoded) {
+>>>>>>> b6ef3290862b3b33c36590c4e11de83aca5f7388
         if (decoded && decoded.user) {
           req.user = decoded;
           next();
@@ -177,7 +185,11 @@ app.post("/register", (req, res) => {
 });
 
 function checkUserAndGenerateToken(data, req, res) {
+<<<<<<< HEAD
   jwt.sign({ user: data.username, id: data._id },secret, { expiresIn: '1d' }, (err, token) => {
+=======
+  jwt.sign({ user: data.username, id: data._id }, 'shhhh1111', { expiresIn: '3d' }, (err, token) => {
+>>>>>>> b6ef3290862b3b33c36590c4e11de83aca5f7388
     if (err) {
       res.status(400).json({
         status: false,
