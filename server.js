@@ -1,6 +1,6 @@
-if(process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
+//if(process.env.NODE_ENV !== 'production') {
+  //require('dotenv').config()
+//}
 
 const Conn = require('./conn/conn');
 var express = require("express");
@@ -8,10 +8,11 @@ var app = express();
 const bcrypt = require('bcrypt');
 var jwt = require('jsonwebtoken');
 var cors = require('cors');
-var multer = require('multer'),
-  bodyParser = require('body-parser'),
+var multer = require('multer');
+  bodyParser = require('body-parser');
   path = require('path');
 var mongoose = require("mongoose");
+require('dotenv').config();
 var fs = require('fs');
 var product = require("./model/product.js");
 var user = require("./model/user.js");
@@ -19,8 +20,7 @@ var user = require("./model/user.js");
 const secret = process.env.JWT_SECRET;
 
 var dir = './uploads';
-var upload = multer({
-  storage: multer.diskStorage({
+var upload = multer({ storage: multer.diskStorage({
 
     destination: function (req, file, callback) {
       if (!fs.existsSync(dir)) {
