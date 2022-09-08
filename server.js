@@ -192,15 +192,15 @@ function checkUserAndGenerateToken(data, req, res) {
 /* Api to add Product */
 app.post("/add-product", upload.any(), (req, res) => {
   try {
-    if (req.files && req.body && req.body.name && req.body.desc && req.body.price &&
+    if (req.files && req.body && req.body.name && req.body.niverH && req.body.niverM &&
       req.body.discount) {
 
       let new_product = new product();
       new_product.name = req.body.name;
       new_product.desc = req.body.desc;
-      new_product.price = req.body.price;
+      new_product.niverH = req.body.niverH;
       new_product.image = req.files[0].filename;
-      new_product.discount = req.body.discount;
+      new_product.niverM = req.body.niverM;
       new_product.user_id = req.user.id;
       new_product.save((err, data) => {
         if (err) {
@@ -233,8 +233,8 @@ app.post("/add-product", upload.any(), (req, res) => {
 /* Api to update Product */
 app.post("/update-product", upload.any(), (req, res) => {
   try {
-    if (req.files && req.body && req.body.name && req.body.desc && req.body.price &&
-      req.body.id && req.body.discount) {
+    if (req.files && req.body && req.body.name && req.body.desc && req.body.niverH &&
+      req.body.id && req.body.niverM) {
 
       product.findById(req.body.id, (err, new_product) => {
 
@@ -253,11 +253,11 @@ app.post("/update-product", upload.any(), (req, res) => {
         if (req.body.desc) {
           new_product.desc = req.body.desc;
         }
-        if (req.body.price) {
-          new_product.price = req.body.price;
+        if (req.body.niverM) {
+          new_product.niverH = req.body.niverH;
         }
-        if (req.body.discount) {
-          new_product.discount = req.body.discount;
+        if (req.body.niverM) {
+          new_product.niverM = req.body.niverM;
         }
 
         new_product.save((err, data) => {
@@ -337,7 +337,7 @@ app.get("/get-product", (req, res) => {
     }
     var perPage = 5;
     var page = req.query.page || 1;
-    product.find(query, { date: 1, name: 1, id: 1, desc: 1, price: 1, discount: 1, image: 1 })
+    product.find(query, { date: 1, name: 1, id: 1, desc: 1, niverH: 1, niverM: 1, image: 1 })
       .skip((perPage * page) - perPage).limit(perPage)
       .then((data) => {
         product.find(query).count()
