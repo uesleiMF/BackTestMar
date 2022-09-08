@@ -192,8 +192,8 @@ function checkUserAndGenerateToken(data, req, res) {
 /* Api to add Product */
 app.post("/add-product", upload.any(), (req, res) => {
   try {
-    if (req.files && req.body && req.body.name && req.body.niverH && req.body.niverM &&
-      req.body.discount) {
+    if (req.files && req.body && req.body.name && req.body.desc && req.body.niverM &&
+      req.body.niverH) {
 
       let new_product = new product();
       new_product.name = req.body.name;
@@ -253,7 +253,7 @@ app.post("/update-product", upload.any(), (req, res) => {
         if (req.body.desc) {
           new_product.desc = req.body.desc;
         }
-        if (req.body.niverM) {
+        if (req.body.niverH) {
           new_product.niverH = req.body.niverH;
         }
         if (req.body.niverM) {
