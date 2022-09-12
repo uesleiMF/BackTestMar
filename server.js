@@ -61,7 +61,7 @@ app.use("/", (req, res, next) => {
           next();
         } else {
           return res.status(401).json({
-            errorMessage: 'User unauthorized!',
+            errorMessage: 'Usuario não autorizado!',
             status: false
           });
         }
@@ -69,7 +69,7 @@ app.use("/", (req, res, next) => {
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
@@ -94,27 +94,22 @@ app.post("/login", (req, res) => {
           } else {
 
             res.status(400).json({
-              errorMessage: 'Username or password is incorrect!',
+              errorMessage: 'Nome de usuário ou senha está incorreta!',
               status: false
             });
           }
 
-        } else {
-          res.status(400).json({
-            errorMessage: 'Username or password is incorrect!',
-            status: false
-          });
         }
       })
     } else {
       res.status(400).json({
-        errorMessage: 'Add proper parameter first!',
+        errorMessage: 'Adicione o parâmetro adequado primeiro!',
         status: false
       });
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
@@ -143,14 +138,14 @@ app.post("/register", (req, res) => {
             } else {
               res.status(200).json({
                 status: true,
-                title: 'Registered Successfully.'
+                title: 'Usuario registrado com sucesso.'
               });
             }
           });
 
         } else {
           res.status(400).json({
-            errorMessage: `UserName ${req.body.username} Already Exist!`,
+            errorMessage: `Usuario ${req.body.username} já existe!`,
             status: false
           });
         }
@@ -159,13 +154,13 @@ app.post("/register", (req, res) => {
 
     } else {
       res.status(400).json({
-        errorMessage: 'Add proper parameter first!',
+        errorMessage: 'Adicione o parâmetro adequado primeiro!',
         status: false
       });
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
@@ -181,7 +176,7 @@ function checkUserAndGenerateToken(data, req, res) {
       });
     } else {
       res.json({
-        message: 'Login Successfully.',
+        message: 'Usuario logado com sucesso.',
         token: token,
         status: true
       });
@@ -189,7 +184,7 @@ function checkUserAndGenerateToken(data, req, res) {
   });
 }
 
-/* Api to add Product */
+/* Api to add Casais */
 app.post("/add-casal", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.niverM &&
@@ -211,26 +206,26 @@ app.post("/add-casal", upload.any(), (req, res) => {
         } else {
           res.status(200).json({
             status: true,
-            title: 'Product Added successfully.'
+            title: 'Casal adicionado com sucesso.'
           });
         }
       });
 
     } else {
       res.status(400).json({
-        errorMessage: 'Add proper parameter first!',
+        errorMessage: 'Adicione o parâmetro adequado primeiro!',
         status: false
       });
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
 });
 
-/* Api to update Product */
+/* Api to update Casais */
 app.post("/update-casal", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.niverH &&
@@ -269,7 +264,7 @@ app.post("/update-casal", upload.any(), (req, res) => {
           } else {
             res.status(200).json({
               status: true,
-              title: 'Product updated.'
+              title: 'Casal Atualzado.'
             });
           }
         });
@@ -278,19 +273,19 @@ app.post("/update-casal", upload.any(), (req, res) => {
 
     } else {
       res.status(400).json({
-        errorMessage: 'Add proper parameter first!',
+        errorMessage: 'Adicione o parâmetro adequado primeiro!',
         status: false
       });
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
 });
 
-/* Api to delete Product */
+/* Api to delete Casais */
 app.post("/delete-casal", (req, res) => {
   try {
     if (req.body && req.body.id) {
@@ -298,7 +293,7 @@ app.post("/delete-casal", (req, res) => {
         if (data.is_delete) {
           res.status(200).json({
             status: true,
-            title: 'Product deleted.'
+            title: 'Casal deletado.'
           });
         } else {
           res.status(400).json({
@@ -309,19 +304,19 @@ app.post("/delete-casal", (req, res) => {
       });
     } else {
       res.status(400).json({
-        errorMessage: 'Add proper parameter first!',
+        errorMessage: 'Adicione o parâmetro adequado primeiro!',
         status: false
       });
     }
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
 });
 
-/*Api to get and search product with pagination and search by name*/
+/*Api to get and search casais with pagination and search by name*/
 app.get("/get-casal", (req, res) => {
   try {
     var query = {};
@@ -346,7 +341,7 @@ app.get("/get-casal", (req, res) => {
             if (data && data.length > 0) {
               res.status(200).json({
                 status: true,
-                title: 'Product retrived.',
+                title: 'Casal recuperado.',
                 casais: data,
                 current_page: page,
                 total: count,
@@ -354,7 +349,7 @@ app.get("/get-casal", (req, res) => {
               });
             } else {
               res.status(400).json({
-                errorMessage: 'There is no product!',
+                errorMessage: 'Não ha Casais cadastrados!',
                 status: false
               });
             }
@@ -369,7 +364,7 @@ app.get("/get-casal", (req, res) => {
       });
   } catch (e) {
     res.status(400).json({
-      errorMessage: 'Something went wrong!',
+      errorMessage: 'Algo deu errado!',
       status: false
     });
   }
