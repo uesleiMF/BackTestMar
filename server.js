@@ -98,9 +98,14 @@ app.post("/login", (req, res) => {
               status: false
             });
           }
-
+        } else {
+          res.status(400).json({
+            errorMessage: 'Nome de usuário ou senha está incorreta!!',
+            status: false
+          });
         }
       })
+      
     } else {
       res.status(400).json({
         errorMessage: 'Adicione o parâmetro adequado primeiro!',
