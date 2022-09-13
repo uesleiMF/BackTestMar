@@ -193,7 +193,7 @@ function checkUserAndGenerateToken(data, req, res) {
 app.post("/add-casal", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.niverM &&
-      req.body.niverH) {
+      req.body.niverH && req.body.tel) {
 
       let new_casal = new casal();
       new_casal.name = req.body.name;
@@ -201,6 +201,7 @@ app.post("/add-casal", upload.any(), (req, res) => {
       new_casal.niverH = req.body.niverH;
       new_casal.image = req.files[0].filename;
       new_casal.niverM = req.body.niverM;
+      new_casal.tel= req.body.tel
       new_casal.user_id = req.user.id;
       new_casal.save((err, data) => {
         if (err) {
@@ -234,7 +235,7 @@ app.post("/add-casal", upload.any(), (req, res) => {
 app.post("/update-casal", upload.any(), (req, res) => {
   try {
     if (req.files && req.body && req.body.name && req.body.desc && req.body.niverH &&
-      req.body.id && req.body.niverM) {
+      req.body.id && req.body.niverM && req.body.tel) {
 
       casal.findById(req.body.id, (err, new_casal) => {
 
@@ -259,6 +260,10 @@ app.post("/update-casal", upload.any(), (req, res) => {
         if (req.body.niverM) {
           new_casal.niverM = req.body.niverM;
         }
+        if ( req.body.tel) {
+          new_casal.tel = req.body.tel;
+        }
+      
 
         new_casal.save((err, data) => {
           if (err) {
@@ -337,7 +342,7 @@ app.get("/get-casal", (req, res) => {
     }
     var perPage = 5;
     var page = req.query.page || 1;
-    casal.find(query, { date: 1, name: 1, id: 1, desc: 1, niverH: 1, niverM: 1, image: 1 })
+    casal.find(query, { date: 1, name: 1, id: 1, desc: 1, niverH: 1, niverM: 1, tel: 1, image: 1 })
       .skip((perPage * page) - perPage).limit(perPage)
       .then((data) => {
         casal.find(query).count()
