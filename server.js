@@ -174,7 +174,7 @@ app.post("/register", (req, res) => {
 function checkUserAndGenerateToken(data, req, res) {
 
   jwt.sign({ user: data.username, id: data._id },secret, { expiresIn: '1d' }, (err, token) => {
-     /*if (err) {
+     if (err) {
       res.status(400).json({
         status: false,
         errorMessage: err,
@@ -185,7 +185,7 @@ function checkUserAndGenerateToken(data, req, res) {
         token: token,
         status: true
       });
-    }*/
+    }
   });
 }
 
@@ -207,7 +207,7 @@ app.post("/add-casal", upload.any(), (req, res) => {
         if (err) {
           res.status(400).json({
             errorMessage: err,
-            status: false
+            status: true
           });
         } else {
           res.status(200).json({
