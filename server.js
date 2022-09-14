@@ -55,14 +55,14 @@ app.use("/", (req, res, next) => {
       /* decode jwt token if authorized*/
 
            jwt.verify(req.headers.token,secret, function (err, decoded) {
-        if (decoded && decoded.user) {
+      if (decoded && decoded.user) {
           req.user = decoded;
           next();
-        } else {
+        /*} else {
           return res.status(401).json({
             errorMessage: 'Usuario não autorizado!',
             status: false
-          });
+          });*/
         }
       })
     }
