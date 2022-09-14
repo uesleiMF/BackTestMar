@@ -134,6 +134,7 @@ app.post("/register", (req, res) => {
             password: req.body.password
           });
           User.save((err, data) => {
+            
             if (err) {
               res.status(400).json({
                 errorMessage: err,
