@@ -269,12 +269,12 @@ app.post("/update-casal", upload.any(), (req, res) => {
           if (err) {
             res.status(400).json({
               errorMessage: err,
-              status: false
+              status: true
             });
           } else {
             res.status(200).json({
               status: true,
-              title: 'Casal Atualzado.'
+              title: 'Casal Atualizado com sucesso.'
             });
           }
         });
