@@ -35,18 +35,17 @@ var upload = multer({
   fileFilter: function (req, file, callback) {
     var ext = path.extname(file.originalname)
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
-      return callback(/*res.end('Only images are allowed')*/ null, true)
+      return callback(/*res.end('Only images are allowed')*/ null, false)
     }
     callback(null, true)
   }
 });
-
 app.use(cors());
 app.use(express.static('uploads'));
-app.use(bodyParser.json({ limit: '30mb', extended: true }))
-app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }));
-
-
+app.use(bodyParser.json());       // to support JSON-encoded bodies
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: false
+}));
 
 app.use("/", (req, res, next) => {
   try {
