@@ -207,7 +207,7 @@ app.post("/add-casal", upload.any(), (req, res) => {
         if (err) {
           res.status(400).json({
             errorMessage: err,
-            status: true
+            status: false
           });
         } else {
           res.status(200).json({
@@ -269,7 +269,7 @@ app.post("/update-casal", upload.any(), (req, res) => {
           if (err) {
             res.status(400).json({
               errorMessage: err,
-              status: true
+              status: false
             });
           } else {
             res.status(200).json({
