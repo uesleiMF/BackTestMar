@@ -58,11 +58,11 @@ app.use("/", (req, res, next) => {
       if (decoded && decoded.user) {
           req.user = decoded;
           next();
-        /*} else {
+        } else {
           return res.status(401).json({
             errorMessage: 'Usuario não autorizado!',
             status: false
-          });*/
+          });
         }
       })
     }
@@ -174,7 +174,7 @@ app.post("/register", (req, res) => {
 function checkUserAndGenerateToken(data, req, res) {
 
   jwt.sign({ user: data.username, id: data._id },secret, { expiresIn: '1d' }, (err, token) => {
-     if (err) {
+     /*if (err) {
       res.status(400).json({
         status: false,
         errorMessage: err,
@@ -185,7 +185,7 @@ function checkUserAndGenerateToken(data, req, res) {
         token: token,
         status: true
       });
-    }
+    }*/
   });
 }
 
