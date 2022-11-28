@@ -16,7 +16,7 @@ var fs = require('fs');
 var casal = require("./model/casal.js");
 var user = require("./model/user.js");
 
-const secret = process.env.JWT_SECRET;
+
 
 var dir = './uploads';
 var upload = multer({
@@ -54,10 +54,14 @@ app.use("/", (req, res, next) => {
     } else {
       /* decode jwt token if authorized*/
 
-           jwt.verify(req.headers.token,secret, function (err, decoded) {
-      if (decoded && decoded.user) {
+      jwt.verify(req.headers.token, ['x-access-token'], function (err,) {
+        if (decoded && decoded.user) {
           req.user = decoded;
           next();
+
+
+
+          
         } else {
           return res.status(401).json({
             errorMessage: 'Usuario não autorizado!',
