@@ -183,6 +183,7 @@ function checkUserAndGenerateToken(data, req, res) {
         status: false,
         errorMessage: err,
       });
+      
     } else {
       res.json({
         message: 'Usuario logado com sucesso.',
