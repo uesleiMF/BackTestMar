@@ -3,7 +3,7 @@
   "description": "app",
   "version": "1.0.0",
   "engines": {
-    "node": "17.x"
+    "node": "18.x"
   },
   "scripts": {
     "start": "node server.js",
