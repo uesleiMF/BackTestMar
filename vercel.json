@@ -1,4 +1,5 @@
 {
+    "version":2,
     "builds": [
         {
             "src": "server.js",
@@ -7,8 +8,24 @@
     ],
     "routes": [
         {
-          "src": "/(.*)",
-          "dest": "server.js"
-        }
+          "src": "/user",
+          "dest": "server.js",
+          "methods":["GET"]
+        },
+        {
+            "src": "/users",
+            "dest": "server.js",
+            "methods":["POST"]
+          },
+          {
+            "src": "/casal",
+            "dest": "server.js",
+            "methods":["GET"]
+          },
+          {
+              "src": "/casais",
+              "dest": "server.js",
+              "methods":["POST"]
+            }
     ]
 }
