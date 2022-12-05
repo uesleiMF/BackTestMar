@@ -1,12 +1,30 @@
 {
+    "version":2,
     "builds": [
         {
-            "src": "server.js",
-            "use": "@vercel/node"
-        }
+            "src": "server.js"
     ],
     "routes": [
         {
+          "src": "/user",
+          "dest": "server.js",
+          "methods":["GET"]
+        },
+        {
+            "src": "/users",
+            "dest": "server.js",
+            "methods":["POST"]
+          },
+          {
+            "src": "/casal",
+            "dest": "server.js",
+            "methods":["GET"]
+          },
+          {
+              "src": "/casais",
+              "dest": "server.js",
+              "methods":["POST"]
+            }
           "src": "/(.*)",
           "dest": "server.js"
         }
