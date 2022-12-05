@@ -3,7 +3,7 @@
     "builds": [
         {
             "src": "server.js",
- "use": "@vercel/node"
+
     
     "routes": [
         {
@@ -16,15 +16,6 @@
             "dest": "server.js",
             "methods":["POST"]
           },
-          {
-            "src": "/casal",
-            "dest": "server.js",
-            "methods":["GET"]
-          },
-          {
-              "src": "/casais",
-              "dest": "server.js",
-              "methods":["POST"]
-            }
+        
     ]
 }
