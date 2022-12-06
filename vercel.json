@@ -2,8 +2,9 @@
     "version":2,
     "builds": [
         {
-            "src": "server.js",
-
+            "src": "server.js"
+        }
+    ],
     
     "routes": [
         {
@@ -15,7 +16,8 @@
             "src": "/users",
             "dest": "server.js",
             "methods":["POST"]
-          },
+          }
+          
         
     ]
 }
