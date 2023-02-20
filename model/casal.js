@@ -11,6 +11,7 @@ casalSchema = new Schema( {
 	user_id: Schema.ObjectId,
 	is_delete: { type: Boolean, default: false },
 	date : { type : Date, default: Date.now }
+	
 }),
 casal = mongoose.model('casal', casalSchema);
 
