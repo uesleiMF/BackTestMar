@@ -1,52 +1,42 @@
-require('dotenv').config()
+// server.js
+require('dotenv').config();
 
-const Conn = require('./conn/conn');
 const express = require('express');
 const app = express();
-const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs'); // bcryptjs recomendado
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
+
+const cloudinary = require('./config/cloudinary');
+const cloudinaryStorage = require('multer-storage-cloudinary'); // sintaxe antiga (v2.2.1)
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const casal = require('./model/casal.js');
-const User = require('./model/user.js');
 
-// ------- CONFIGS -------
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+const User = require('./model/user');
+const Casal = require('./model/casal');
 
-// Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${Date.now()}${ext}`);
-  }
+// ---------- Cloudinary storage (sintaxe antiga) ----------
+const storage = cloudinaryStorage({
+  cloudinary: cloudinary,
+  folder: 'casais_app',
+  allowedFormats: ['jpg', 'jpeg', 'png'],
+  // opcional: você pode definir public_id gerado aqui também (string ou function)
+  // publicId: (req, file) => `${Date.now()}_${file.originalname.split('.').slice(0,-1).join('.')}`
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowed = ['.png', '.jpg', '.jpeg'];
-  const ext = path.extname(file.originalname).toLowerCase();
-  if (!allowed.includes(ext)) return cb(new Error('Only images are allowed'), false);
-  cb(null, true);
-};
+const upload = multer({ storage });
 
-const upload = multer({ storage, fileFilter });
-
-// Middlewares
+// ---------- Middlewares ----------
 app.use(cors());
-app.use(express.static(UPLOAD_DIR));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Simple JWT auth middleware
-app.use(async (req, res, next) => {
+// ---------- JWT auth middleware ----------
+app.use((req, res, next) => {
   try {
-    // Allow public routes
+    // rotas públicas
     if (req.path === '/' || req.path === '/login' || req.path === '/register') return next();
 
-    // Accept either Authorization: Bearer <token> or token: <token>
     const authHeader = req.headers.authorization || req.headers.token;
     if (!authHeader) {
       return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
@@ -71,11 +61,9 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.status(200).json({ status: true, title: 'APIs rodando' });
-});
+app.get('/', (req, res) => res.json({ status: true, title: 'APIs rodando' }));
 
-// Helper to generate JWT
+// ---------- JWT generator ----------
 function generateToken(userDoc) {
   return new Promise((resolve, reject) => {
     jwt.sign({ user: userDoc.username, id: userDoc._id }, process.env.SECRET, { expiresIn: '1d' }, (err, token) => {
@@ -85,7 +73,7 @@ function generateToken(userDoc) {
   });
 }
 
-// REGISTER
+// ---------- Register ----------
 app.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -95,19 +83,17 @@ app.post('/register', async (req, res) => {
     if (exists) return res.status(400).json({ status: false, errorMessage: `Usuario ${username} já existe!` });
 
     const hashed = await bcrypt.hash(password, 10);
-
     const newUser = new User({ username, password: hashed });
     await newUser.save();
 
     res.status(201).json({ status: true, title: 'Usuário registrado com sucesso.' });
-
   } catch (e) {
     console.error('Register error:', e);
     res.status(500).json({ status: false, errorMessage: 'Erro ao registrar usuário.' });
   }
 });
 
-// LOGIN
+// ---------- Login ----------
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -121,34 +107,37 @@ app.post('/login', async (req, res) => {
 
     const token = await generateToken(found);
     res.json({ status: true, message: 'Usuario logado com sucesso.', token });
-
   } catch (e) {
     console.error('Login error:', e);
     res.status(500).json({ status: false, errorMessage: 'Erro no login.' });
   }
 });
 
-// Add casal
+// ---------- Add casal (upload para Cloudinary) ----------
 app.post('/add-casal', upload.single('image'), async (req, res) => {
   try {
     const { name, desc, niverM, niverH, tel } = req.body;
-    if (!req.file || !name || !desc || !niverM || !niverH || !tel) {
-      // If multer rejected the file, req.file will be undefined
-      return res.status(400).json({ status: false, errorMessage: 'Adicione os parâmetros adequados e a imagem.' });
-    }
 
-    const new_casal = new casal({
+    if (!req.file) return res.status(400).json({ status: false, errorMessage: 'Imagem é obrigatória.' });
+
+    // A versão antiga retorna propriedades diferentes dependendo da config.
+    // Vamos pegar url/path e public_id de forma robusta.
+    const imageUrl = req.file.url || req.file.path || req.file.secure_url || req.file.location;
+    const publicId = req.file.public_id || req.file.filename || '';
+
+    const new_casal = new Casal({
       name,
       desc,
       niverH,
       niverM,
       tel,
-      image: req.file.filename,
+      image: imageUrl || '',
+      public_id: publicId || '',
       user_id: req.user.id
     });
 
     await new_casal.save();
-    res.status(201).json({ status: true, title: 'Casal adicionado com sucesso.' });
+    res.status(201).json({ status: true, title: 'Casal adicionado com sucesso.', casal: new_casal });
 
   } catch (e) {
     console.error('Add casal error:', e);
@@ -156,22 +145,25 @@ app.post('/add-casal', upload.single('image'), async (req, res) => {
   }
 });
 
-// Update casal
+// ---------- Update casal ----------
 app.post('/update-casal', upload.single('image'), async (req, res) => {
   try {
     const { id, name, desc, niverH, niverM, tel } = req.body;
     if (!id) return res.status(400).json({ status: false, errorMessage: 'Id é obrigatório' });
 
-    const existing = await casal.findById(id);
+    const existing = await Casal.findById(id);
     if (!existing) return res.status(404).json({ status: false, errorMessage: 'Casal não encontrado' });
 
-    // Remove old file if new uploaded
-    if (req.file && existing.image) {
-      const oldPath = path.join(UPLOAD_DIR, existing.image);
-      if (fs.existsSync(oldPath)) {
-        try { fs.unlinkSync(oldPath); } catch (err) { console.warn('Erro ao remover imagem antiga:', err); }
+    // Se nova imagem enviada -> destruir antiga no Cloudinary
+    if (req.file) {
+      const publicIdNew = req.file.public_id || req.file.filename || '';
+      const urlNew = req.file.url || req.file.path || req.file.secure_url || req.file.location;
+
+      if (existing.public_id) {
+        try { await cloudinary.uploader.destroy(existing.public_id); } catch (err) { console.warn('Erro ao destruir imagem antiga:', err); }
       }
-      existing.image = req.file.filename;
+      existing.image = urlNew || existing.image;
+      existing.public_id = publicIdNew || existing.public_id;
     }
 
     if (name) existing.name = name;
@@ -181,7 +173,7 @@ app.post('/update-casal', upload.single('image'), async (req, res) => {
     if (tel) existing.tel = tel;
 
     await existing.save();
-    res.json({ status: true, title: 'Casal atualizado com sucesso.' });
+    res.json({ status: true, title: 'Casal atualizado com sucesso.', casal: existing });
 
   } catch (e) {
     console.error('Update casal error:', e);
@@ -189,60 +181,78 @@ app.post('/update-casal', upload.single('image'), async (req, res) => {
   }
 });
 
-// Delete casal (soft delete)
+// ---------- Delete casal (soft + remove imagem Cloudinary) ----------
 app.post('/delete-casal', async (req, res) => {
   try {
     const { id } = req.body;
     if (!id) return res.status(400).json({ status: false, errorMessage: 'Id é obrigatório' });
 
-    const updated = await casal.findByIdAndUpdate(id, { is_delete: true }, { new: true });
-    if (updated && updated.is_delete) {
-      return res.json({ status: true, title: 'Casal deletado.' });
-    }
-    res.status(400).json({ status: false, errorMessage: 'Erro ao deletar casal.' });
+    const existing = await Casal.findById(id);
+    if (!existing) return res.status(404).json({ status: false, errorMessage: 'Casal não encontrado' });
 
+    if (existing.public_id) {
+      try { await cloudinary.uploader.destroy(existing.public_id); } catch (err) { console.warn('Erro ao destruir imagem:', err); }
+    }
+
+    existing.is_delete = true;
+    await existing.save();
+
+    res.json({ status: true, title: 'Casal deletado.' });
   } catch (e) {
     console.error('Delete casal error:', e);
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar casal.' });
   }
 });
 
-// Get casal with pagination and search
+// ---------- Get casal (paginação e busca) ----------
 app.get('/get-casal', async (req, res) => {
   try {
     const query = { is_delete: false, user_id: req.user.id };
+
     if (req.query.search) query.name = { $regex: req.query.search, $options: 'i' };
 
     const perPage = parseInt(req.query.perPage, 10) || 5;
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
 
     const [data, count] = await Promise.all([
-      casal.find(query, { date: 1, name: 1, desc: 1, niverH: 1, niverM: 1, tel: 1, image: 1 })
+      Casal.find(query, { date: 1, name: 1, desc: 1, niverH: 1, niverM: 1, tel: 1, image: 1 })
         .skip((perPage * page) - perPage)
         .limit(perPage),
-      casal.countDocuments(query)
+      Casal.countDocuments(query)
     ]);
 
     if (!data || data.length === 0) return res.status(404).json({ status: false, errorMessage: 'Não há Casais cadastrados!' });
 
-    res.json({ status: true, title: 'Casais recuperados.', casais: data, current_page: page, total: count, pages: Math.ceil(count / perPage) });
-
+    res.json({
+      status: true,
+      title: 'Casais recuperados.',
+      casais: data,
+      current_page: page,
+      total: count,
+      pages: Math.ceil(count / perPage)
+    });
   } catch (e) {
     console.error('Get casal error:', e);
     res.status(500).json({ status: false, errorMessage: 'Erro ao recuperar casais.' });
   }
 });
 
-// DB connect (uses your existing Conn wrapper)
-const db_url = process.env.DB_URL;
-const db_user = process.env.DB_USER;
-const db_pass = process.env.DB_PASS;
-const db_data = process.env.DB_DATA;
+// ---------- DB connect ----------
+(async function connectDB(){
+  try {
+    const url = process.env.DB_URL;
+    if (!url) {
+      console.error('DB_URL não encontrada no .env');
+      process.exit(1);
+    }
+    await mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true });
+    console.log('DB conectado');
+  } catch (err) {
+    console.error('Erro ao conectar DB:', err);
+    process.exit(1);
+  }
+})();
 
-Conn(db_url, db_user, db_pass, db_data)
-  .then(() => console.log('DB conectado'))
-  .catch(err => console.error('Erro ao conectar DB:', err));
-
-// Start server
+// ---------- Start server ----------
 const port = process.env.PORT || 2000;
 app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
