@@ -1,15 +1,15 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
-const cors = require('cors');
 
-const User = require('./model/user');
-const Casal = require('./model/casal');
+const User = require('./model/user'); // seu model
+const Casal = require('./model/casal'); // seu model
 
 const app = express();
 
@@ -24,24 +24,18 @@ api_secret: process.env.CLOUDINARY_API_SECRET
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ---------- CORS Global ----------
+// ---------- CORS ----------
 app.use(cors({
-origin: '*', // permite qualquer origem
+origin: '*',
 methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'token']
 }));
 
-// ---------- Tratamento de pré-vôo OPTIONS ----------
-app.options('*', (req, res) => {
-res.header('Access-Control-Allow-Origin', '*');
-res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,token');
-res.sendStatus(200);
-});
+// Pré-flight (OPTIONS)
+app.options('*', cors());
 
 // ---------- JWT Auth Middleware ----------
 app.use((req, res, next) => {
-// rotas públicas
 if (['/', '/login', '/register'].includes(req.path)) return next();
 
 const authHeader = req.headers.authorization || req.headers.token;
@@ -85,7 +79,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ---------- Rotas ----------
 
 // Test
-app.get('/', (req, res) => res.json({ status: true, title: 'APIs rodando' }));
+app.get('/', (req, res) => res.json({ status: true, title: 'API rodando' }));
 
 // Register
 app.post('/register', async (req, res) => {
@@ -95,7 +89,7 @@ if (!username || !password) return res.status(400).json({ status: false, errorMe
 
 
 const exists = await User.findOne({ username });
-if (exists) return res.status(400).json({ status: false, errorMessage: `Usuario ${username} já existe!` });
+if (exists) return res.status(400).json({ status: false, errorMessage: `Usuário ${username} já existe!` });
 
 const hashed = await bcrypt.hash(password, 10);
 const newUser = new User({ username, password: hashed });
@@ -118,13 +112,13 @@ if (!username || !password) return res.status(400).json({ status: false, errorMe
 
 
 const found = await User.findOne({ username });
-if (!found) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha está incorreta!' });
+if (!found) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha incorreta!' });
 
 const match = await bcrypt.compare(password, found.password);
-if (!match) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha está incorreta!' });
+if (!match) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha incorreta!' });
 
 const token = await generateToken(found);
-res.json({ status: true, message: 'Usuario logado com sucesso.', token, id: found._id });
+res.json({ status: true, message: 'Usuário logado com sucesso.', token, id: found._id });
 
 
 } catch (e) {
@@ -133,8 +127,17 @@ res.status(500).json({ status: false, errorMessage: 'Erro no login.' });
 }
 });
 
+// Exemplo de rota protegida
+app.get('/get-casal', async (req, res) => {
+try {
+const casais = await Casal.find({ user_id: req.user.id, is_delete: false });
+res.json({ status: true, casais });
+} catch (e) {
+console.error('Get casal error:', e);
+res.status(500).json({ status: false, errorMessage: 'Erro ao recuperar casais.' });
+}
+});
+
 // ---------- Start Server ----------
 const port = process.env.PORT || 2000;
-app.listen(port, () => {
-console.log(`Servidor rodando na porta ${port}`);
-});
+app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
