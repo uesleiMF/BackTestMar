@@ -1,143 +1,232 @@
 require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('./config/cloudinary');
 const streamifier = require('streamifier');
 
-const User = require('./model/user'); // seu model
-const Casal = require('./model/casal'); // seu model
+const User = require('./model/user');
+const Casal = require('./model/casal');
 
 const app = express();
-
-// ---------- Configurações Cloudinary ----------
-cloudinary.config({
-cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-api_key: process.env.CLOUDINARY_API_KEY,
-api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-// ---------- Middlewares ----------
+app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
-// ---------- CORS ----------
-app.use(cors({
-origin: '*',
-methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'token']
-}));
+// ----------------------------
+// DATABASE CONNECTION
+// ----------------------------
+mongoose.connect(process.env.DB_URL, {
+  user: process.env.DB_USER,
+  pass: process.env.DB_PASS,
+  dbName: process.env.DB_DATA
+}).then(() => console.log('MongoDB Connected'))
+  .catch(err => console.log('DB Error:', err));
 
-// Pré-flight (OPTIONS)
-app.options('*', cors());
-
-// ---------- JWT Auth Middleware ----------
-app.use((req, res, next) => {
-if (['/', '/login', '/register'].includes(req.path)) return next();
-
-const authHeader = req.headers.authorization || req.headers.token;
-if (!authHeader) return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
-
-let token = authHeader;
-if (token.toLowerCase().startsWith('bearer ')) token = token.slice(7).trim();
-
-jwt.verify(token, process.env.SECRET, (err, decoded) => {
-if (err || !decoded || !decoded.id) return res.status(401).json({ status: false, errorMessage: 'Usuário não autorizado!' });
-req.user = decoded;
-next();
-});
+// ----------------------------
+// MULTER CONFIG (Upload memória)
+// ----------------------------
+const upload = multer({
+  storage: multer.memoryStorage()
 });
 
-// ---------- DB Connect ----------
-(async function connectDB() {
-try {
-if (!process.env.DB_URL) throw new Error('DB_URL não encontrada no .env');
-await mongoose.connect(process.env.DB_URL);
-console.log('DB conectado');
-} catch (err) {
-console.error('Erro ao conectar DB:', err);
-process.exit(1);
-}
-})();
+// ----------------------------
+// MIDDLEWARE LOGIN (JWT)
+// ----------------------------
+function verifyToken(req, res, next) {
+  const token = req.headers['authorization'];
 
-// ---------- JWT Generator ----------
-function generateToken(userDoc) {
-return new Promise((resolve, reject) => {
-jwt.sign({ id: userDoc._id, username: userDoc.username }, process.env.SECRET, { expiresIn: '1d' }, (err, token) => {
-if (err) return reject(err);
-resolve(token);
-});
-});
+  if (!token)
+    return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
+
+  jwt.verify(token, process.env.SECRET, (err, decoded) => {
+    if (err)
+      return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
+
+    req.user = decoded;
+    next();
+  });
 }
 
-// ---------- Multer memory storage ----------
-const upload = multer({ storage: multer.memoryStorage() });
-
-// ---------- Rotas ----------
-
-// Test
-app.get('/', (req, res) => res.json({ status: true, title: 'API rodando' }));
-
-// Register
+// ----------------------------
+// ROTA DE REGISTRO
+// ----------------------------
 app.post('/register', async (req, res) => {
-try {
-const { username, password } = req.body;
-if (!username || !password) return res.status(400).json({ status: false, errorMessage: 'Adicione username e password' });
+  try {
+    const { username, password } = req.body;
 
+    if (!username || !password)
+      return res.status(400).json({ status: false, errorMessage: 'Campos obrigatórios!' });
 
-const exists = await User.findOne({ username });
-if (exists) return res.status(400).json({ status: false, errorMessage: `Usuário ${username} já existe!` });
+    const userExists = await User.findOne({ username });
 
-const hashed = await bcrypt.hash(password, 10);
-const newUser = new User({ username, password: hashed });
-await newUser.save();
+    if (userExists)
+      return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
 
-res.status(201).json({ status: true, title: 'Usuário registrado com sucesso.' });
+    const hash = await bcrypt.hash(password, 10);
 
+    const newUser = new User({
+      username,
+      password: hash
+    });
 
-} catch (e) {
-console.error('Register error:', e);
-res.status(500).json({ status: false, errorMessage: 'Erro ao registrar usuário.' });
-}
+    await newUser.save();
+
+    res.json({ status: true, message: 'Registrado com sucesso!' });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro no registro' });
+  }
 });
 
-// Login
+// ----------------------------
+// LOGIN
+// ----------------------------
 app.post('/login', async (req, res) => {
-try {
-const { username, password } = req.body;
-if (!username || !password) return res.status(400).json({ status: false, errorMessage: 'Adicione username e password' });
+  try {
+    const { username, password } = req.body;
 
+    const findUser = await User.findOne({ username });
 
-const found = await User.findOne({ username });
-if (!found) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha incorreta!' });
+    if (!findUser)
+      return res.status(400).json({ status: false, errorMessage: 'Usuário não encontrado!' });
 
-const match = await bcrypt.compare(password, found.password);
-if (!match) return res.status(400).json({ status: false, errorMessage: 'Nome de usuário ou senha incorreta!' });
+    const match = await bcrypt.compare(password, findUser.password);
 
-const token = await generateToken(found);
-res.json({ status: true, message: 'Usuário logado com sucesso.', token, id: found._id });
+    if (!match)
+      return res.status(400).json({ status: false, errorMessage: 'Senha incorreta!' });
 
+    const token = jwt.sign({ id: findUser._id }, process.env.SECRET, { expiresIn: "30d" });
 
-} catch (e) {
-console.error('Login error:', e);
-res.status(500).json({ status: false, errorMessage: 'Erro no login.' });
-}
+    res.json({ status: true, token });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro no login' });
+  }
 });
 
-// Exemplo de rota protegida
-app.get('/get-casal', async (req, res) => {
-try {
-const casais = await Casal.find({ user_id: req.user.id, is_delete: false });
-res.json({ status: true, casais });
-} catch (e) {
-console.error('Get casal error:', e);
-res.status(500).json({ status: false, errorMessage: 'Erro ao recuperar casais.' });
-}
+// ----------------------------
+// ADD CASAL (UPLOAD CLOUDINARY)
+// ----------------------------
+app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const { name, age } = req.body;
+
+    if (!name || !age)
+      return res.status(400).json({ status: false, errorMessage: 'Preencha todos os campos!' });
+
+    let imageUrl = null;
+
+    if (req.file) {
+      const uploadCloud = () => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream((err, result) => {
+            if (result) resolve(result);
+            else reject(err);
+          });
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+      };
+
+      const uploaded = await uploadCloud();
+      imageUrl = uploaded.secure_url;
+    }
+
+    const newCasal = new Casal({
+      user_id: req.user.id,
+      name,
+      age,
+      image: imageUrl,
+      is_delete: false,
+      date: new Date()
+    });
+
+    await newCasal.save();
+
+    res.json({
+      status: true,
+      message: "Casal criado com sucesso!",
+      casal: newCasal
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao criar casal' });
+  }
 });
 
-// ---------- Start Server ----------
-const port = process.env.PORT || 2000;
-app.listen(port, () => console.log(`Servidor rodando na porta ${port}`));
+// ----------------------------
+// GET CASAL DO USUÁRIO LOGADO
+// ----------------------------
+app.get('/get-casal', verifyToken, async (req, res) => {
+  try {
+    const data = await Casal.find({ user_id: req.user.id, is_delete: false })
+      .sort({ date: -1 });
+
+    res.json({ status: true, casal: data });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar dados' });
+  }
+});
+
+// ----------------------------
+// UPDATE CASAL
+// ----------------------------
+app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res) => {
+  try {
+    const { name, age } = req.body;
+    let updateData = { name, age };
+
+    if (req.file) {
+      const uploadCloud = () => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream((err, result) => {
+            if (result) resolve(result);
+            else reject(err);
+          });
+          streamifier.createReadStream(req.file.buffer).pipe(stream);
+        });
+      };
+
+      const uploaded = await uploadCloud();
+      updateData.image = uploaded.secure_url;
+    }
+
+    const updated = await Casal.findByIdAndUpdate(req.params.id, updateData, { new: true });
+
+    res.json({ status: true, message: 'Atualizado!', casal: updated });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar' });
+  }
+});
+
+// ----------------------------
+// DELETE CASAL
+// ----------------------------
+app.delete('/delete-casal/:id', verifyToken, async (req, res) => {
+  try {
+    await Casal.findByIdAndUpdate(req.params.id, { is_delete: true });
+
+    res.json({ status: true, message: 'Deletado!' });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao deletar' });
+  }
+});
+
+// ----------------------------
+// START SERVER
+// ----------------------------
+app.listen(process.env.PORT, () => {
+  console.log("Server running on port " + process.env.PORT);
+});
