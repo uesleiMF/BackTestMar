@@ -34,17 +34,22 @@ const upload = multer({
 });
 
 // ----------------------------
-// MIDDLEWARE LOGIN (JWT)
+// MIDDLEWARE LOGIN (JWT) — ATUALIZADO
 // ----------------------------
 function verifyToken(req, res, next) {
-  const token = req.headers['authorization'];
+  const authHeader = req.headers["authorization"];
 
-  if (!token)
-    return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
+  if (!authHeader)
+    return res.status(401).json({ status: false, errorMessage: "Token não enviado!" });
+
+  // Permite "Bearer TOKEN" ou "TOKEN"
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.split(" ")[1]
+    : authHeader;
 
   jwt.verify(token, process.env.SECRET, (err, decoded) => {
     if (err)
-      return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
+      return res.status(401).json({ status: false, errorMessage: "Token inválido!" });
 
     req.user = decoded;
     next();
@@ -84,7 +89,7 @@ app.post('/register', async (req, res) => {
 });
 
 // ----------------------------
-// LOGIN
+// LOGIN — ATUALIZADO (agora envia ID)
 // ----------------------------
 app.post('/login', async (req, res) => {
   try {
@@ -102,7 +107,11 @@ app.post('/login', async (req, res) => {
 
     const token = jwt.sign({ id: findUser._id }, process.env.SECRET, { expiresIn: "30d" });
 
-    res.json({ status: true, token });
+    res.json({
+      status: true,
+      token,
+      id: findUser._id  // <-- AGORA O FRONT RECEBE ID
+    });
 
   } catch (error) {
     console.log(error);
@@ -165,8 +174,10 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
 // ----------------------------
 app.get('/get-casal', verifyToken, async (req, res) => {
   try {
-    const data = await Casal.find({ user_id: req.user.id, is_delete: false })
-      .sort({ date: -1 });
+    const data = await Casal.find({
+      user_id: req.user.id,
+      is_delete: false
+    }).sort({ date: -1 });
 
     res.json({ status: true, casal: data });
 
