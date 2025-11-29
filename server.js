@@ -204,14 +204,15 @@ app.get('/get-casal', verifyToken, async (req, res) => {
 
 
 // ----------------------------
+// ----------------------------
 // UPDATE CASAL
 // ----------------------------
 app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    const { name, age } = req.body;
+    const { name, desc, tel, niverH, niverM } = req.body;
+    const updateData = { name, desc, tel, niverH, niverM };
 
-    let updateData = { name, age };
-
+    // Se houver arquivo, faz upload para o Cloudinary
     if (req.file) {
       const uploadCloud = () => {
         return new Promise((resolve, reject) => {
@@ -225,6 +226,7 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
 
       const uploaded = await uploadCloud();
       updateData.image = uploaded.secure_url;
+      updateData.public_id = uploaded.public_id;
     }
 
     const updated = await Casal.findByIdAndUpdate(
@@ -233,11 +235,19 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
       { new: true }
     );
 
-    res.json({ status: true, message: 'Atualizado!', casal: updated });
+    if (!updated) {
+      return res.status(404).json({ status: false, errorMessage: 'Casal não encontrado' });
+    }
+
+    res.json({
+      status: true,
+      message: 'Casal atualizado com sucesso!',
+      casal: updated
+    });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar' });
+    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar casal' });
   }
 });
 
