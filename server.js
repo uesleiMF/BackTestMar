@@ -127,17 +127,20 @@ app.post('/login', async (req, res) => {
 
 
 // ----------------------------
-// ADD CASAL (UPLOAD CLOUDINARY)
+// ADD CASAL (UPLOAD CLOUDINARY) — CORRIGIDO
 // ----------------------------
 app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   try {
-    const { name, age } = req.body;
+    const { name, desc, niverH, niverM, tel } = req.body;
 
-    if (!name || !age)
-      return res.status(400).json({ status: false, errorMessage: 'Preencha todos os campos!' });
+    // Validação: apenas o NOME é obrigatório
+    if (!name)
+      return res.status(400).json({ status: false, errorMessage: 'Preencha o nome!' });
 
-    let imageUrl = null;
+    let imageUrl = '';
+    let publicId = '';
 
+    // Upload da imagem caso enviada
     if (req.file) {
       const uploadCloud = () => {
         return new Promise((resolve, reject) => {
@@ -151,13 +154,18 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
 
       const uploaded = await uploadCloud();
       imageUrl = uploaded.secure_url;
+      publicId = uploaded.public_id;
     }
 
     const newCasal = new Casal({
       user_id: req.user.id,
       name,
-      age,
+      desc,
+      niverH,
+      niverM,
+      tel,
       image: imageUrl,
+      public_id: publicId,
       is_delete: false,
       date: new Date()
     });
@@ -175,7 +183,6 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao criar casal' });
   }
 });
-
 
 // ----------------------------
 // GET CASAL DO USUÁRIO LOGADO
