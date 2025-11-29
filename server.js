@@ -26,35 +26,38 @@ mongoose.connect(process.env.DB_URL, {
 }).then(() => console.log('MongoDB Connected'))
   .catch(err => console.log('DB Error:', err));
 
+
 // ----------------------------
-// MULTER CONFIG (Upload memória)
+// MULTER CONFIG
 // ----------------------------
 const upload = multer({
   storage: multer.memoryStorage()
 });
 
+
 // ----------------------------
-// MIDDLEWARE LOGIN (JWT) — ATUALIZADO
+// MIDDLEWARE LOGIN (JWT)
 // ----------------------------
 function verifyToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
+  let token = req.headers['authorization'];
 
-  if (!authHeader)
-    return res.status(401).json({ status: false, errorMessage: "Token não enviado!" });
+  if (!token)
+    return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
 
-  // Permite "Bearer TOKEN" ou "TOKEN"
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.split(" ")[1]
-    : authHeader;
+  // Aceita "Bearer xxxx"
+  if (token.startsWith("Bearer ")) {
+    token = token.slice(7).trim();
+  }
 
   jwt.verify(token, process.env.SECRET, (err, decoded) => {
     if (err)
-      return res.status(401).json({ status: false, errorMessage: "Token inválido!" });
+      return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
 
     req.user = decoded;
     next();
   });
 }
+
 
 // ----------------------------
 // ROTA DE REGISTRO
@@ -88,29 +91,32 @@ app.post('/register', async (req, res) => {
   }
 });
 
+
 // ----------------------------
-// LOGIN — ATUALIZADO (agora envia ID)
+// LOGIN
 // ----------------------------
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
     const findUser = await User.findOne({ username });
-
     if (!findUser)
       return res.status(400).json({ status: false, errorMessage: 'Usuário não encontrado!' });
 
     const match = await bcrypt.compare(password, findUser.password);
-
     if (!match)
       return res.status(400).json({ status: false, errorMessage: 'Senha incorreta!' });
 
-    const token = jwt.sign({ id: findUser._id }, process.env.SECRET, { expiresIn: "30d" });
+    const token = jwt.sign(
+      { id: findUser._id },
+      process.env.SECRET,
+      { expiresIn: "30d" }
+    );
 
     res.json({
       status: true,
       token,
-      id: findUser._id  // <-- AGORA O FRONT RECEBE ID
+      id: findUser._id
     });
 
   } catch (error) {
@@ -118,6 +124,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro no login' });
   }
 });
+
 
 // ----------------------------
 // ADD CASAL (UPLOAD CLOUDINARY)
@@ -169,6 +176,7 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   }
 });
 
+
 // ----------------------------
 // GET CASAL DO USUÁRIO LOGADO
 // ----------------------------
@@ -187,12 +195,14 @@ app.get('/get-casal', verifyToken, async (req, res) => {
   }
 });
 
+
 // ----------------------------
 // UPDATE CASAL
 // ----------------------------
 app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res) => {
   try {
     const { name, age } = req.body;
+
     let updateData = { name, age };
 
     if (req.file) {
@@ -210,7 +220,11 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
       updateData.image = uploaded.secure_url;
     }
 
-    const updated = await Casal.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    const updated = await Casal.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
     res.json({ status: true, message: 'Atualizado!', casal: updated });
 
@@ -219,6 +233,7 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
     res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar' });
   }
 });
+
 
 // ----------------------------
 // DELETE CASAL
@@ -234,6 +249,7 @@ app.delete('/delete-casal/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar' });
   }
 });
+
 
 // ----------------------------
 // START SERVER
