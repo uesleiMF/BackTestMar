@@ -30,13 +30,11 @@ mongoose.connect(process.env.DB_URL, {
 // ----------------------------
 // MULTER CONFIG
 // ----------------------------
-const upload = multer({
-  storage: multer.memoryStorage()
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 
 // ----------------------------
-// MIDDLEWARE LOGIN (JWT)
+// JWT MIDDLEWARE
 // ----------------------------
 function verifyToken(req, res, next) {
   let token = req.headers['authorization'];
@@ -44,7 +42,6 @@ function verifyToken(req, res, next) {
   if (!token)
     return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
 
-  // Aceita "Bearer xxxx"
   if (token.startsWith("Bearer ")) {
     token = token.slice(7).trim();
   }
@@ -60,7 +57,19 @@ function verifyToken(req, res, next) {
 
 
 // ----------------------------
-// ROTA DE REGISTRO
+// ROTA PING PARA O RENDER (resolve 404)
+// ----------------------------
+app.get("/", (req, res) => {
+  res.json({ status: true, message: "API Online e funcionando!" });
+});
+
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: Date.now() });
+});
+
+
+// ----------------------------
+// REGISTER
 // ----------------------------
 app.post('/register', async (req, res) => {
   try {
@@ -70,17 +79,12 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ status: false, errorMessage: 'Campos obrigatórios!' });
 
     const userExists = await User.findOne({ username });
-
     if (userExists)
       return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
 
     const hash = await bcrypt.hash(password, 10);
 
-    const newUser = new User({
-      username,
-      password: hash
-    });
-
+    const newUser = new User({ username, password: hash });
     await newUser.save();
 
     res.json({ status: true, message: 'Registrado com sucesso!' });
@@ -113,11 +117,7 @@ app.post('/login', async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    res.json({
-      status: true,
-      token,
-      id: findUser._id
-    });
+    res.json({ status: true, token, id: findUser._id });
 
   } catch (error) {
     console.log(error);
@@ -127,30 +127,27 @@ app.post('/login', async (req, res) => {
 
 
 // ----------------------------
-// ADD CASAL (UPLOAD CLOUDINARY) — CORRIGIDO
+// ADD CASAL (UPLOAD CLOUDINARY)
 // ----------------------------
 app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   try {
     const { name, desc, niverH, niverM, tel } = req.body;
 
-    // Validação: apenas o NOME é obrigatório
     if (!name)
       return res.status(400).json({ status: false, errorMessage: 'Preencha o nome!' });
 
     let imageUrl = '';
     let publicId = '';
 
-    // Upload da imagem caso enviada
     if (req.file) {
-      const uploadCloud = () => {
-        return new Promise((resolve, reject) => {
+      const uploadCloud = () =>
+        new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream((err, result) => {
             if (result) resolve(result);
             else reject(err);
           });
           streamifier.createReadStream(req.file.buffer).pipe(stream);
         });
-      };
 
       const uploaded = await uploadCloud();
       imageUrl = uploaded.secure_url;
@@ -172,11 +169,7 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
 
     await newCasal.save();
 
-    res.json({
-      status: true,
-      message: "Casal criado com sucesso!",
-      casal: newCasal
-    });
+    res.json({ status: true, message: "Casal criado!", casal: newCasal });
 
   } catch (error) {
     console.log(error);
@@ -184,8 +177,9 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   }
 });
 
+
 // ----------------------------
-// GET CASAL DO USUÁRIO LOGADO
+// GET CASAL
 // ----------------------------
 app.get('/get-casal', verifyToken, async (req, res) => {
   try {
@@ -204,7 +198,6 @@ app.get('/get-casal', verifyToken, async (req, res) => {
 
 
 // ----------------------------
-// ----------------------------
 // UPDATE CASAL
 // ----------------------------
 app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res) => {
@@ -212,42 +205,28 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
     const { name, desc, tel, niverH, niverM } = req.body;
     const updateData = { name, desc, tel, niverH, niverM };
 
-    // Se houver arquivo, faz upload para o Cloudinary
     if (req.file) {
-      const uploadCloud = () => {
-        return new Promise((resolve, reject) => {
+      const uploadCloud = () =>
+        new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream((err, result) => {
             if (result) resolve(result);
             else reject(err);
           });
           streamifier.createReadStream(req.file.buffer).pipe(stream);
         });
-      };
 
       const uploaded = await uploadCloud();
       updateData.image = uploaded.secure_url;
       updateData.public_id = uploaded.public_id;
     }
 
-    const updated = await Casal.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    const updated = await Casal.findByIdAndUpdate(req.params.id, updateData, { new: true });
 
-    if (!updated) {
-      return res.status(404).json({ status: false, errorMessage: 'Casal não encontrado' });
-    }
-
-    res.json({
-      status: true,
-      message: 'Casal atualizado com sucesso!',
-      casal: updated
-    });
+    res.json({ status: true, message: 'Atualizado!', casal: updated });
 
   } catch (error) {
     console.log(error);
-    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar casal' });
+    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar' });
   }
 });
 
@@ -258,7 +237,6 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
 app.delete('/delete-casal/:id', verifyToken, async (req, res) => {
   try {
     await Casal.findByIdAndUpdate(req.params.id, { is_delete: true });
-
     res.json({ status: true, message: 'Deletado!' });
 
   } catch (error) {
