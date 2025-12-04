@@ -11,7 +11,7 @@ const streamifier = require('streamifier');
 
 const User = require('./model/user');
 const Casal = require('./model/casal');
-
+const History = require('./model/history');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -26,12 +26,10 @@ mongoose.connect(process.env.DB_URL, {
 }).then(() => console.log('MongoDB Connected'))
   .catch(err => console.log('DB Error:', err));
 
-
 // ----------------------------
 // MULTER CONFIG
 // ----------------------------
 const upload = multer({ storage: multer.memoryStorage() });
-
 
 // ----------------------------
 // JWT MIDDLEWARE
@@ -55,9 +53,8 @@ function verifyToken(req, res, next) {
   });
 }
 
-
 // ----------------------------
-// ROTA PING PARA O RENDER (resolve 404)
+// ROTA PING
 // ----------------------------
 app.get("/", (req, res) => {
   res.json({ status: true, message: "API Online e funcionando!" });
@@ -66,7 +63,6 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
-
 
 // ----------------------------
 // REGISTER
@@ -94,7 +90,6 @@ app.post('/register', async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro no registro' });
   }
 });
-
 
 // ----------------------------
 // LOGIN
@@ -125,6 +120,62 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// ----------------------------
+// HISTÓRICO DE NOMES
+// ----------------------------
+
+// Adicionar nome ao histórico
+app.post('/history/add', verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ status: false, errorMessage: 'Nome vazio!' });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
+
+    if (!user.nameHistory.includes(name)) {
+      user.nameHistory.push(name);
+      await user.save();
+    }
+
+    res.json({ status: true, history: user.nameHistory });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao adicionar histórico' });
+  }
+});
+
+// Buscar histórico de nomes
+app.get('/history', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
+
+    res.json({ status: true, history: user.nameHistory });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar histórico' });
+  }
+});
+
+// Limpar histórico de nomes
+app.delete('/history/clear', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
+
+    user.nameHistory = [];
+    await user.save();
+
+    res.json({ status: true, message: 'Histórico limpo!' });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao limpar histórico' });
+  }
+});
 
 // ----------------------------
 // ADD CASAL (UPLOAD CLOUDINARY)
@@ -135,6 +186,13 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
 
     if (!name)
       return res.status(400).json({ status: false, errorMessage: 'Preencha o nome!' });
+
+    // Adiciona ao histórico automaticamente
+    const user = await User.findById(req.user.id);
+    if (user && !user.nameHistory.includes(name)) {
+      user.nameHistory.push(name);
+      await user.save();
+    }
 
     let imageUrl = '';
     let publicId = '';
@@ -177,7 +235,6 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   }
 });
 
-
 // ----------------------------
 // GET CASAL
 // ----------------------------
@@ -195,7 +252,6 @@ app.get('/get-casal', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao buscar dados' });
   }
 });
-
 
 // ----------------------------
 // UPDATE CASAL
@@ -230,7 +286,6 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
   }
 });
 
-
 // ----------------------------
 // DELETE CASAL
 // ----------------------------
@@ -244,7 +299,6 @@ app.delete('/delete-casal/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar' });
   }
 });
-
 
 // ----------------------------
 // START SERVER
