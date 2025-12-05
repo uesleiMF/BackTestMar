@@ -160,6 +160,29 @@ app.get('/history', verifyToken, async (req, res) => {
   }
 });
 
+// DELETE /history/delete/:name - deletar nome específico
+app.delete('/history/delete/:name', verifyToken, async (req, res) => {
+  try {
+    const { name } = req.params;
+    if (!name) return res.status(400).json({ status: false, errorMessage: 'Nome inválido!' });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
+
+    // Remove o nome do array
+    user.nameHistory = user.nameHistory.filter(n => n !== name);
+    await user.save();
+
+    res.json({ status: true, history: user.nameHistory });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao deletar nome' });
+  }
+});
+
+
+
 // Limpar histórico de nomes
 app.delete('/history/clear', verifyToken, async (req, res) => {
   try {
