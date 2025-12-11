@@ -411,6 +411,22 @@ app.put('/delete-niver-esposa/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao apagar aniversário da esposa' });
   }
 });
+// ----------------------------
+// LIMPAR TODOS OS ANIVERSÁRIOS
+// ----------------------------
+app.put('/limpar-aniversarios', verifyToken, async (req, res) => {
+  try {
+    await Casal.updateMany(
+      { user_id: req.user.id, is_delete: false },
+      { $set: { niverH: "", niverM: "" } }
+    );
+
+    res.json({ status: true, message: 'Todos os aniversários foram apagados!' });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao limpar aniversários' });
+  }
+});
 
 
 // ----------------------------
