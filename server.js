@@ -12,6 +12,7 @@ const streamifier = require('streamifier');
 const User = require('./model/user');
 const Casal = require('./model/casal');
 const History = require('./model/history');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -26,10 +27,12 @@ mongoose.connect(process.env.DB_URL, {
 }).then(() => console.log('MongoDB Connected'))
   .catch(err => console.log('DB Error:', err));
 
+
 // ----------------------------
 // MULTER CONFIG
 // ----------------------------
 const upload = multer({ storage: multer.memoryStorage() });
+
 
 // ----------------------------
 // JWT MIDDLEWARE
@@ -53,6 +56,7 @@ function verifyToken(req, res, next) {
   });
 }
 
+
 // ----------------------------
 // ROTA PING
 // ----------------------------
@@ -63,6 +67,7 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: Date.now() });
 });
+
 
 // ----------------------------
 // REGISTER
@@ -86,10 +91,10 @@ app.post('/register', async (req, res) => {
     res.json({ status: true, message: 'Registrado com sucesso!' });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro no registro' });
   }
 });
+
 
 // ----------------------------
 // LOGIN
@@ -115,23 +120,20 @@ app.post('/login', async (req, res) => {
     res.json({ status: true, token, id: findUser._id });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro no login' });
   }
 });
 
+
 // ----------------------------
 // HISTÓRICO DE NOMES
 // ----------------------------
-
-// Adicionar nome ao histórico
 app.post('/history/add', verifyToken, async (req, res) => {
   try {
     const { name } = req.body;
     if (!name) return res.status(400).json({ status: false, errorMessage: 'Nome vazio!' });
 
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
 
     if (!user.nameHistory.includes(name)) {
       user.nameHistory.push(name);
@@ -141,67 +143,51 @@ app.post('/history/add', verifyToken, async (req, res) => {
     res.json({ status: true, history: user.nameHistory });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao adicionar histórico' });
   }
 });
 
-// Buscar histórico de nomes
 app.get('/history', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
-
     res.json({ status: true, history: user.nameHistory });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao buscar histórico' });
   }
 });
 
-// DELETE /history/delete/:name - deletar nome específico
 app.delete('/history/delete/:name', verifyToken, async (req, res) => {
   try {
     const { name } = req.params;
-    if (!name) return res.status(400).json({ status: false, errorMessage: 'Nome inválido!' });
 
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
-
-    // Remove o nome do array
     user.nameHistory = user.nameHistory.filter(n => n !== name);
     await user.save();
 
     res.json({ status: true, history: user.nameHistory });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar nome' });
   }
 });
 
-
-
-// Limpar histórico de nomes
 app.delete('/history/clear', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ status: false, errorMessage: 'Usuário não encontrado!' });
-
     user.nameHistory = [];
     await user.save();
 
     res.json({ status: true, message: 'Histórico limpo!' });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao limpar histórico' });
   }
 });
 
+
 // ----------------------------
-// ADD CASAL (UPLOAD CLOUDINARY)
+// ADD CASAL
 // ----------------------------
 app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
   try {
@@ -210,9 +196,8 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
     if (!name)
       return res.status(400).json({ status: false, errorMessage: 'Preencha o nome!' });
 
-    // Adiciona ao histórico automaticamente
     const user = await User.findById(req.user.id);
-    if (user && !user.nameHistory.includes(name)) {
+    if (!user.nameHistory.includes(name)) {
       user.nameHistory.push(name);
       await user.save();
     }
@@ -249,14 +234,13 @@ app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
     });
 
     await newCasal.save();
-
     res.json({ status: true, message: "Casal criado!", casal: newCasal });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao criar casal' });
   }
 });
+
 
 // ----------------------------
 // GET CASAL
@@ -271,10 +255,10 @@ app.get('/get-casal', verifyToken, async (req, res) => {
     res.json({ status: true, casal: data });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao buscar dados' });
   }
 });
+
 
 // ----------------------------
 // UPDATE CASAL
@@ -304,10 +288,10 @@ app.put('/update-casal/:id', verifyToken, upload.single('file'), async (req, res
     res.json({ status: true, message: 'Atualizado!', casal: updated });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar' });
   }
 });
+
 
 // ----------------------------
 // DELETE CASAL
@@ -318,10 +302,116 @@ app.delete('/delete-casal/:id', verifyToken, async (req, res) => {
     res.json({ status: true, message: 'Deletado!' });
 
   } catch (error) {
-    console.log(error);
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar' });
   }
 });
+
+
+// ----------------------------
+// ROTAS DE ANIVERSARIANTES
+// ----------------------------
+
+// Todos com aniversário preenchido
+app.get('/aniversariantes', verifyToken, async (req, res) => {
+  try {
+    const data = await Casal.find({
+      user_id: req.user.id,
+      is_delete: false,
+      $or: [
+        { niverH: { $exists: true, $ne: "" } },
+        { niverM: { $exists: true, $ne: "" } }
+      ]
+    });
+
+    res.json({ status: true, aniversariantes: data });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar aniversariantes' });
+  }
+});
+
+
+// Aniversariantes do mês
+app.get('/aniversariantes-mes', verifyToken, async (req, res) => {
+  try {
+    const hoje = new Date();
+    const mesAtual = (hoje.getMonth() + 1).toString().padStart(2, '0');
+
+    const data = await Casal.find({
+      user_id: req.user.id,
+      is_delete: false,
+      $or: [
+        { niverH: { $regex: `-${mesAtual}-` } },
+        { niverM: { $regex: `-${mesAtual}-` } }
+      ]
+    });
+
+    res.json({ status: true, aniversariantes: data });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar aniversariantes do mês' });
+  }
+});
+
+
+// Aniversariantes do dia
+app.get('/aniversariantes-dia', verifyToken, async (req, res) => {
+  try {
+    const hoje = new Date();
+    const mes = (hoje.getMonth() + 1).toString().padStart(2, '0');
+    const dia = hoje.getDate().toString().padStart(2, '0');
+    const hojeFormato = `${dia}-${mes}`;
+
+    const data = await Casal.find({
+      user_id: req.user.id,
+      is_delete: false,
+      $or: [
+        { niverH: { $regex: hojeFormato } },
+        { niverM: { $regex: hojeFormato } }
+      ]
+    });
+
+    res.json({ status: true, aniversariantes: data });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar aniversariantes do dia' });
+  }
+});
+
+
+// Apagar apenas data do esposo
+app.put('/delete-niver-esposo/:id', verifyToken, async (req, res) => {
+  try {
+    const upd = await Casal.findByIdAndUpdate(
+      req.params.id,
+      { niverH: "" },
+      { new: true }
+    );
+
+    res.json({ status: true, message: 'Aniversário do esposo removido!', casal: upd });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao apagar aniversário do esposo' });
+  }
+});
+
+
+// Apagar apenas data da esposa
+app.put('/delete-niver-esposa/:id', verifyToken, async (req, res) => {
+  try {
+    const upd = await Casal.findByIdAndUpdate(
+      req.params.id,
+      { niverM: "" },
+      { new: true }
+    );
+
+    res.json({ status: true, message: 'Aniversário da esposa removido!', casal: upd });
+
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao apagar aniversário da esposa' });
+  }
+});
+
 
 // ----------------------------
 // START SERVER
