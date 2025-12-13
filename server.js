@@ -12,7 +12,7 @@ const streamifier = require('streamifier');
 const User = require('./model/user');
 const Casal = require('./model/casal');
 const History = require('./model/history');
-
+const CasalSimple = require('./model/casalSimple');
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -409,6 +409,78 @@ app.put('/delete-niver-esposa/:id', verifyToken, async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ status: false, errorMessage: 'Erro ao apagar aniversário da esposa' });
+  }
+});
+
+
+// ----------------------------
+// ADD CASAIS SIMPLES
+// ----------------------------
+app.post('/add-casal-simple', verifyToken, async (req, res) => {
+  try {
+    const { name, age } = req.body;
+    if (!name || !age)
+      return res.status(400).json({ status: false, errorMessage: 'Nome e idade são obrigatórios!' });
+
+    const newCasal = new CasalSimple({
+      user_id: req.user.id,
+      name,
+      age
+    });
+
+    await newCasal.save();
+    res.json({ status: true, message: 'Casal simples criado!', casal: newCasal });
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao criar casal simples' });
+  }
+});
+
+// ----------------------------
+// LISTAR CASAIS SIMPLES
+// ----------------------------
+app.get('/get-casal-simple', verifyToken, async (req, res) => {
+  try {
+    const data = await CasalSimple.find({
+      user_id: req.user.id,
+      is_delete: false
+    }).sort({ date: -1 });
+
+    res.json({ status: true, casal: data });
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar casal simples' });
+  }
+});
+
+// ----------------------------
+// ATUALIZAR CASAIS SIMPLES
+// ----------------------------
+app.put('/update-casal-simple/:id', verifyToken, async (req, res) => {
+  try {
+    const { name, age } = req.body;
+    if (!name || !age)
+      return res.status(400).json({ status: false, errorMessage: 'Nome e idade são obrigatórios!' });
+
+    const updated = await CasalSimple.findByIdAndUpdate(
+      req.params.id,
+      { name, age },
+      { new: true }
+    );
+
+    res.json({ status: true, message: 'Casal simples atualizado!', casal: updated });
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao atualizar casal simples' });
+  }
+});
+
+// ----------------------------
+// DELETAR CASAIS SIMPLES
+// ----------------------------
+app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
+  try {
+    await CasalSimple.findByIdAndUpdate(req.params.id, { is_delete: true });
+    res.json({ status: true, message: 'Casal simples deletado!' });
+  } catch (error) {
+    res.status(500).json({ status: false, errorMessage: 'Erro ao deletar casal simples' });
   }
 });
 
