@@ -17,6 +17,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+// === CONFIGURAÇÃO CORS - PERMITE SEU FRONTEND ===
+app.use(cors({
+  origin: [
+    'http://localhost:3000',     // Para desenvolvimento local
+    'https://rede-amai-ieq.vercel.app/', // Se você tiver o frontend no Render também
+    // Adicione outros domínios se necessário
+  ],
+  credentials: true, // Se você usa cookies ou Authorization header
+}));
+
+
+
 // ----------------------------
 // DATABASE CONNECTION
 // ----------------------------
