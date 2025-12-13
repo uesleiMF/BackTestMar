@@ -413,19 +413,19 @@ app.put('/delete-niver-esposa/:id', verifyToken, async (req, res) => {
 });
 
 
-// ----------------------------
+// --// ----------------------------
 // ADD CASAIS SIMPLES
 // ----------------------------
 app.post('/add-casal-simple', verifyToken, async (req, res) => {
   try {
-    const { name, age } = req.body;
-    if (!name || !age)
-      return res.status(400).json({ status: false, errorMessage: 'Nome e idade são obrigatórios!' });
+    const { name, birthDate } = req.body;
+    if (!name || !birthDate)
+      return res.status(400).json({ status: false, errorMessage: 'Nome e data de nascimento são obrigatórios!' });
 
     const newCasal = new CasalSimple({
       user_id: req.user.id,
       name,
-      age
+      birthDate
     });
 
     await newCasal.save();
@@ -456,13 +456,13 @@ app.get('/get-casal-simple', verifyToken, async (req, res) => {
 // ----------------------------
 app.put('/update-casal-simple/:id', verifyToken, async (req, res) => {
   try {
-    const { name, age } = req.body;
-    if (!name || !age)
-      return res.status(400).json({ status: false, errorMessage: 'Nome e idade são obrigatórios!' });
+    const { name, birthDate } = req.body;
+    if (!name || !birthDate)
+      return res.status(400).json({ status: false, errorMessage: 'Nome e data de nascimento são obrigatórios!' });
 
     const updated = await CasalSimple.findByIdAndUpdate(
       req.params.id,
-      { name, age },
+      { name, birthDate },
       { new: true }
     );
 
@@ -483,6 +483,7 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar casal simples' });
   }
 });
+
 
 
 // ----------------------------
