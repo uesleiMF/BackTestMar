@@ -33,13 +33,14 @@ app.use(cors({
 // ----------------------------
 // DATABASE CONNECTION
 // ----------------------------
-mongoose.connect(process.env.DB_URL, {
-  user: process.env.DB_USER,
-  pass: process.env.DB_PASS,
-  dbName: process.env.DB_DATA
-}).then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log('DB Error:', err));
-
+mongoose.connect(process.env.DB_URL)
+  .then(() => {
+    console.log('✅ MongoDB conectado com sucesso');
+  })
+  .catch((error) => {
+    console.error('❌ Erro ao conectar no MongoDB:', error.message);
+    process.exit(1);
+  });
 
 // ----------------------------
 // MULTER CONFIG
