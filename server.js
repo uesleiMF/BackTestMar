@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const cloudinary = require('./config/cloudinary');
 const streamifier = require('streamifier');
-
+const Evento = require('./model/evento');
 const User = require('./model/user');
 const Casal = require('./model/casal');
 const History = require('./model/history');
@@ -498,6 +498,81 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
   }
 });
 
+/* ==============================
+   EVENTOS / CALENDÁRIO
+============================== */
+
+// Criar evento
+app.post('/eventos', verifyToken, async (req, res) => {
+  try {
+    const { titulo, descricao, data } = req.body;
+
+    if (!titulo || !data)
+      return res.status(400).json({
+        status: false,
+        errorMessage: 'Título e data são obrigatórios'
+      });
+
+    const evento = await new Evento({
+      titulo,
+      descricao,
+      data,
+      criadoPor: req.user.id
+    }).save();
+
+    res.json({ status: true, evento });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao criar evento'
+    });
+  }
+});
+
+// Listar eventos (para calendário)
+app.get('/eventos', verifyToken, async (req, res) => {
+  try {
+    const eventos = await Evento.find().sort({ data: 1 });
+    res.json({ status: true, eventos });
+  } catch {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao buscar eventos'
+    });
+  }
+});
+
+// Atualizar evento
+app.put('/eventos/:id', verifyToken, async (req, res) => {
+  try {
+    const evento = await Evento.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json({ status: true, evento });
+  } catch {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao atualizar evento'
+    });
+  }
+});
+
+// Deletar evento
+app.delete('/eventos/:id', verifyToken, async (req, res) => {
+  try {
+    await Evento.findByIdAndDelete(req.params.id);
+    res.json({ status: true, message: 'Evento removido' });
+  } catch {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao deletar evento'
+    });
+  }
+});
 
 
 // ----------------------------
