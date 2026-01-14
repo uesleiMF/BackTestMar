@@ -14,7 +14,7 @@ const Casal = require('./model/casal');
 const History = require('./model/history');
 const CasalSimple = require('./model/casalSimple');
 const app = express();
-app.use(cors());
+
 app.use(express.json());
 
 
