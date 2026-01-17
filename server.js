@@ -28,7 +28,7 @@ app.use(express.json());
 // CORS global seguro
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://rede-amai-ieq.vercel.app'
+  'https://rede-amai-ieq-sede.vercel.app/'
 ];
 
 app.use((req, res, next) => {
