@@ -6,47 +6,47 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const cloudinary = require('./config/cloudinary');
 const streamifier = require('streamifier');
+
+const cloudinary = require('./config/cloudinary');
+
 const Evento = require('./model/evento');
 const User = require('./model/user');
 const Casal = require('./model/casal');
 const History = require('./model/history');
 const CasalSimple = require('./model/casalSimple');
+
 const app = express();
 
+// ----------------------------
+// MIDDLEWARES GLOBAIS
+// ----------------------------
 app.use(express.json());
 
-
-// === CONFIGURAÇÃO CORS - PERMITE SEU FRONTEND ===
 app.use(cors({
   origin: [
-    'http://localhost:3000',     // Para desenvolvimento local
-    'https://rede-amai-ieq.vercel.app/', // Se você tiver o frontend no Render também
-    // Adicione outros domínios se necessário
+    'http://localhost:3000',
+    'https://rede-amai-ieq.vercel.app'
   ],
-  credentials: true, // Se você usa cookies ou Authorization header
+  credentials: true,
 }));
 
-
-
 // ----------------------------
-// DATABASE CONNECTION
+// DATABASE CONNECTION (DB_URL)
 // ----------------------------
 mongoose.connect(process.env.DB_URL)
-  .then(() => {
-    console.log('✅ MongoDB conectado com sucesso');
-  })
-  .catch((error) => {
-    console.error('❌ Erro ao conectar no MongoDB:', error.message);
+  .then(() => console.log('✅ MongoDB conectado com sucesso'))
+  .catch(err => {
+    console.error('❌ Erro MongoDB:', err.message);
     process.exit(1);
   });
 
 // ----------------------------
 // MULTER CONFIG
 // ----------------------------
-const upload = multer({ storage: multer.memoryStorage() });
-
+const upload = multer({
+  storage: multer.memoryStorage()
+});
 
 // ----------------------------
 // JWT MIDDLEWARE
@@ -57,7 +57,7 @@ function verifyToken(req, res, next) {
   if (!token)
     return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
 
-  if (token.startsWith("Bearer ")) {
+  if (token.startsWith('Bearer ')) {
     token = token.slice(7).trim();
   }
 
@@ -70,18 +70,29 @@ function verifyToken(req, res, next) {
   });
 }
 
+// ----------------------------
+// PERMISSÃO: SOMENTE LÍDER
+// ----------------------------
+function onlyLeader(req, res, next) {
+  if (!req.user || req.user.role !== 'leader') {
+    return res.status(403).json({
+      status: false,
+      errorMessage: 'Acesso permitido apenas para líderes'
+    });
+  }
+  next();
+}
 
 // ----------------------------
-// ROTA PING
+// ROTAS BÁSICAS
 // ----------------------------
-app.get("/", (req, res) => {
-  res.json({ status: true, message: "API Online e funcionando!" });
+app.get('/', (req, res) => {
+  res.json({ status: true, message: 'API Online e funcionando!' });
 });
 
-app.get("/health", (req, res) => {
-  res.json({ status: "ok", timestamp: Date.now() });
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: Date.now() });
 });
-
 
 // ----------------------------
 // REGISTER
@@ -93,22 +104,23 @@ app.post('/register', async (req, res) => {
     if (!username || !password)
       return res.status(400).json({ status: false, errorMessage: 'Campos obrigatórios!' });
 
-    const userExists = await User.findOne({ username });
-    if (userExists)
+    const exists = await User.findOne({ username });
+    if (exists)
       return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
 
     const hash = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ username, password: hash });
-    await newUser.save();
+    await new User({
+      username,
+      password: hash
+    }).save();
 
     res.json({ status: true, message: 'Registrado com sucesso!' });
 
-  } catch (error) {
+  } catch {
     res.status(500).json({ status: false, errorMessage: 'Erro no registro' });
   }
 });
-
 
 // ----------------------------
 // LOGIN
@@ -117,27 +129,31 @@ app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const findUser = await User.findOne({ username });
-    if (!findUser)
+    const user = await User.findOne({ username });
+    if (!user)
       return res.status(400).json({ status: false, errorMessage: 'Usuário não encontrado!' });
 
-    const match = await bcrypt.compare(password, findUser.password);
+    const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res.status(400).json({ status: false, errorMessage: 'Senha incorreta!' });
 
     const token = jwt.sign(
-      { id: findUser._id },
+      { id: user._id, role: user.role },
       process.env.SECRET,
-      { expiresIn: "30d" }
+      { expiresIn: '30d' }
     );
 
-    res.json({ status: true, token, id: findUser._id });
+    res.json({
+      status: true,
+      token,
+      id: user._id,
+      role: user.role
+    });
 
-  } catch (error) {
+  } catch {
     res.status(500).json({ status: false, errorMessage: 'Erro no login' });
   }
 });
-
 
 // ----------------------------
 // HISTÓRICO DE NOMES
@@ -145,58 +161,29 @@ app.post('/login', async (req, res) => {
 app.post('/history/add', verifyToken, async (req, res) => {
   try {
     const { name } = req.body;
-    if (!name) return res.status(400).json({ status: false, errorMessage: 'Nome vazio!' });
 
     const user = await User.findById(req.user.id);
-
     if (!user.nameHistory.includes(name)) {
       user.nameHistory.push(name);
       await user.save();
     }
 
     res.json({ status: true, history: user.nameHistory });
-
-  } catch (error) {
-    res.status(500).json({ status: false, errorMessage: 'Erro ao adicionar histórico' });
+  } catch {
+    res.status(500).json({ status: false, errorMessage: 'Erro no histórico' });
   }
 });
 
 app.get('/history', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    res.json({ status: true, history: user.nameHistory });
-
-  } catch (error) {
-    res.status(500).json({ status: false, errorMessage: 'Erro ao buscar histórico' });
-  }
-});
-
-app.delete('/history/delete/:name', verifyToken, async (req, res) => {
-  try {
-    const { name } = req.params;
-
-    const user = await User.findById(req.user.id);
-    user.nameHistory = user.nameHistory.filter(n => n !== name);
-    await user.save();
-
-    res.json({ status: true, history: user.nameHistory });
-
-  } catch (error) {
-    res.status(500).json({ status: false, errorMessage: 'Erro ao deletar nome' });
-  }
+  const user = await User.findById(req.user.id);
+  res.json({ status: true, history: user.nameHistory });
 });
 
 app.delete('/history/clear', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    user.nameHistory = [];
-    await user.save();
-
-    res.json({ status: true, message: 'Histórico limpo!' });
-
-  } catch (error) {
-    res.status(500).json({ status: false, errorMessage: 'Erro ao limpar histórico' });
-  }
+  const user = await User.findById(req.user.id);
+  user.nameHistory = [];
+  await user.save();
+  res.json({ status: true });
 });
 
 
