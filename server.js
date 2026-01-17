@@ -18,46 +18,18 @@ const CasalSimple = require('./model/casalSimple');
 
 const app = express();
 
-// ==============================
-// MIDDLEWARES GLOBAIS - ORDEM IMPORTANTE!
-// ==============================
-
-// 1. CORS - deve vir PRIMEIRO!
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',              // caso use Vite no dev
-  'https://rede-amai-ieq.vercel.app',   // seu frontend atual no Vercel
-  // Adicione aqui outros domínios se testar em Netlify, Render, etc.
-  // Exemplo: 'https://seu-app.netlify.app'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Permite requisições sem origin (Postman, curl, etc.) ou origens permitidas
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`[CORS BLOCKED] Origin não permitido: ${origin}`);
-      callback(new Error('Origem não permitida pelo CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 200  // ← MUITO IMPORTANTE para evitar problemas com 204
-}));
-
-// Força handling de todas as OPTIONS (redundância útil no Render)
-app.options('*', cors());
-
-// 2. Body parser
+// ----------------------------
+// MIDDLEWARES GLOBAIS
+// ----------------------------
 app.use(express.json());
 
-// Debug temporário - veja nos logs do Render qual origin está chegando
-app.use((req, res, next) => {
-  console.log(`[${req.method}] ${req.url} - Origin: ${req.headers.origin || 'sem origin'}`);
-  next();
-});
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://rede-amai-ieq.vercel.app'
+  ],
+  credentials: true,
+}));
 
 // ----------------------------
 // DATABASE CONNECTION (DB_URL)
