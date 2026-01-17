@@ -16,7 +16,6 @@ const cloudinary = require('./config/cloudinary');
 const Evento = require('./model/evento');
 const User = require('./model/user');
 const Casal = require('./model/casal');
-const History = require('./model/history');
 const CasalSimple = require('./model/casalSimple');
 
 const app = express();
@@ -26,14 +25,25 @@ const app = express();
 // ----------------------------
 app.use(express.json());
 
-// CORS
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://rede-amai-ieq.vercel.app'
-  ],
-  credentials: true,
-}));
+// CORS global seguro
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://rede-amai-ieq.vercel.app'
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  next();
+});
+
+// Rota OPTIONS para preflight CORS
+app.options('*', (req, res) => res.sendStatus(200));
 
 // ----------------------------
 // DATABASE CONNECTION
@@ -54,18 +64,21 @@ const upload = multer({ storage: multer.memoryStorage() });
 // JWT MIDDLEWARE
 // ----------------------------
 function verifyToken(req, res, next) {
-  let token = req.headers['authorization'];
+  try {
+    let token = req.headers['authorization'];
+    if (!token) return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
 
-  if (!token)
-    return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
+    if (token.startsWith('Bearer ')) token = token.slice(7).trim();
 
-  if (token.startsWith('Bearer ')) token = token.slice(7).trim();
-
-  jwt.verify(token, process.env.SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
-    req.user = decoded;
-    next();
-  });
+    jwt.verify(token, process.env.SECRET, (err, decoded) => {
+      if (err) return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
+      req.user = decoded;
+      next();
+    });
+  } catch (err) {
+    console.error('Erro verifyToken:', err);
+    res.status(500).json({ status: false, errorMessage: 'Erro interno' });
+  }
 }
 
 // ----------------------------
@@ -86,10 +99,9 @@ app.get('/', (req, res) => res.json({ status: true, message: 'API Online e funci
 // Health check seguro
 app.get('/health', (req, res) => {
   try {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // garante CORS em teste
     res.json({ status: 'ok', timestamp: Date.now() });
   } catch (err) {
-    console.error('Erro no /health:', err);
+    console.error('Erro /health:', err);
     res.status(500).json({ status: false, errorMessage: 'Erro interno' });
   }
 });
@@ -106,7 +118,6 @@ app.post('/register', async (req, res) => {
     if (exists) return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
 
     const hash = await bcrypt.hash(password, 10);
-
     await new User({ username, password: hash }).save();
 
     res.json({ status: true, message: 'Registrado com sucesso!' });
