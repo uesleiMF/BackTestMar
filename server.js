@@ -1,3 +1,6 @@
+// ----------------------------
+// IMPORTS
+// ----------------------------
 require('dotenv').config();
 
 const express = require('express');
@@ -23,6 +26,7 @@ const app = express();
 // ----------------------------
 app.use(express.json());
 
+// CORS
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -32,7 +36,7 @@ app.use(cors({
 }));
 
 // ----------------------------
-// DATABASE CONNECTION (DB_URL)
+// DATABASE CONNECTION
 // ----------------------------
 mongoose.connect(process.env.DB_URL)
   .then(() => console.log('✅ MongoDB conectado com sucesso'))
@@ -44,9 +48,7 @@ mongoose.connect(process.env.DB_URL)
 // ----------------------------
 // MULTER CONFIG
 // ----------------------------
-const upload = multer({
-  storage: multer.memoryStorage()
-});
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ----------------------------
 // JWT MIDDLEWARE
@@ -57,28 +59,21 @@ function verifyToken(req, res, next) {
   if (!token)
     return res.status(401).json({ status: false, errorMessage: 'Token não enviado!' });
 
-  if (token.startsWith('Bearer ')) {
-    token = token.slice(7).trim();
-  }
+  if (token.startsWith('Bearer ')) token = token.slice(7).trim();
 
   jwt.verify(token, process.env.SECRET, (err, decoded) => {
-    if (err)
-      return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
-
+    if (err) return res.status(401).json({ status: false, errorMessage: 'Token inválido!' });
     req.user = decoded;
     next();
   });
 }
 
 // ----------------------------
-// PERMISSÃO: SOMENTE LÍDER
+// MIDDLEWARE PARA LÍDER
 // ----------------------------
 function onlyLeader(req, res, next) {
   if (!req.user || req.user.role !== 'leader') {
-    return res.status(403).json({
-      status: false,
-      errorMessage: 'Acesso permitido apenas para líderes'
-    });
+    return res.status(403).json({ status: false, errorMessage: 'Acesso permitido apenas para líderes' });
   }
   next();
 }
@@ -86,12 +81,17 @@ function onlyLeader(req, res, next) {
 // ----------------------------
 // ROTAS BÁSICAS
 // ----------------------------
-app.get('/', (req, res) => {
-  res.json({ status: true, message: 'API Online e funcionando!' });
-});
+app.get('/', (req, res) => res.json({ status: true, message: 'API Online e funcionando!' }));
 
+// Health check seguro
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+  try {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // garante CORS em teste
+    res.json({ status: 'ok', timestamp: Date.now() });
+  } catch (err) {
+    console.error('Erro no /health:', err);
+    res.status(500).json({ status: false, errorMessage: 'Erro interno' });
+  }
 });
 
 // ----------------------------
@@ -100,24 +100,18 @@ app.get('/health', (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    if (!username || !password)
-      return res.status(400).json({ status: false, errorMessage: 'Campos obrigatórios!' });
+    if (!username || !password) return res.status(400).json({ status: false, errorMessage: 'Campos obrigatórios!' });
 
     const exists = await User.findOne({ username });
-    if (exists)
-      return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
+    if (exists) return res.status(400).json({ status: false, errorMessage: 'Usuário já existe!' });
 
     const hash = await bcrypt.hash(password, 10);
 
-    await new User({
-      username,
-      password: hash
-    }).save();
+    await new User({ username, password: hash }).save();
 
     res.json({ status: true, message: 'Registrado com sucesso!' });
-
-  } catch {
+  } catch (err) {
+    console.error('Erro /register:', err);
     res.status(500).json({ status: false, errorMessage: 'Erro no registro' });
   }
 });
@@ -128,29 +122,17 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
     const user = await User.findOne({ username });
-    if (!user)
-      return res.status(400).json({ status: false, errorMessage: 'Usuário não encontrado!' });
+    if (!user) return res.status(400).json({ status: false, errorMessage: 'Usuário não encontrado!' });
 
     const match = await bcrypt.compare(password, user.password);
-    if (!match)
-      return res.status(400).json({ status: false, errorMessage: 'Senha incorreta!' });
+    if (!match) return res.status(400).json({ status: false, errorMessage: 'Senha incorreta!' });
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.SECRET,
-      { expiresIn: '30d' }
-    );
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.SECRET, { expiresIn: '30d' });
 
-    res.json({
-      status: true,
-      token,
-      id: user._id,
-      role: user.role
-    });
-
-  } catch {
+    res.json({ status: true, token, id: user._id, role: user.role });
+  } catch (err) {
+    console.error('Erro /login:', err);
     res.status(500).json({ status: false, errorMessage: 'Erro no login' });
   }
 });
@@ -161,33 +143,40 @@ app.post('/login', async (req, res) => {
 app.post('/history/add', verifyToken, async (req, res) => {
   try {
     const { name } = req.body;
-
     const user = await User.findById(req.user.id);
     if (!user.nameHistory.includes(name)) {
       user.nameHistory.push(name);
       await user.save();
     }
-
     res.json({ status: true, history: user.nameHistory });
-  } catch {
+  } catch (err) {
+    console.error('Erro /history/add:', err);
     res.status(500).json({ status: false, errorMessage: 'Erro no histórico' });
   }
 });
 
 app.get('/history', verifyToken, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json({ status: true, history: user.nameHistory });
+  try {
+    const user = await User.findById(req.user.id);
+    res.json({ status: true, history: user.nameHistory });
+  } catch (err) {
+    console.error('Erro /history:', err);
+    res.status(500).json({ status: false, errorMessage: 'Erro no histórico' });
+  }
 });
 
 app.delete('/history/clear', verifyToken, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  user.nameHistory = [];
-  await user.save();
-  res.json({ status: true });
+  try {
+    const user = await User.findById(req.user.id);
+    user.nameHistory = [];
+    await user.save();
+    res.json({ status: true });
+  } catch (err) {
+    console.error('Erro /history/clear:', err);
+    res.status(500).json({ status: false, errorMessage: 'Erro ao limpar histórico' });
+  }
 });
 
-
-// ----------------------------
 // ADD CASAL
 // ----------------------------
 app.post('/add-casal', verifyToken, upload.single('file'), async (req, res) => {
