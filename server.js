@@ -488,6 +488,24 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
    EVENTOS / CALENDÁRIO
 ============================== */
 
+
+
+// 🔓 EVENTOS PÚBLICOS (SEM LOGIN)
+app.get('/eventos-publicos', async (req, res) => {
+  try {
+    const eventos = await Evento.find().sort({ data: 1 });
+    res.json(eventos);
+  } catch {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao buscar eventos públicos'
+    });
+  }
+});
+
+
+
+
 // Criar evento
 app.post('/eventos', verifyToken, async (req, res) => {
   try {
