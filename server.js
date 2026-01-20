@@ -484,7 +484,6 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar casal simples' });
   }
 });
-
 /* ==============================
    EVENTOS / CALENDÁRIO
 ============================== */
@@ -494,22 +493,30 @@ app.post('/eventos', verifyToken, async (req, res) => {
   try {
     const { titulo, descricao, data } = req.body;
 
-    if (!titulo || !data)
+    if (!titulo || !data) {
       return res.status(400).json({
         status: false,
         errorMessage: 'Título e data são obrigatórios'
       });
+    }
 
-    const evento = await new Evento({
+    // 🔒 GARANTE FORMATO YYYY-MM-DD
+    const dataFormatada = data.split('T')[0];
+
+    const evento = await Evento.create({
       titulo,
       descricao,
-      data,
+      data: dataFormatada,
       criadoPor: req.user.id
-    }).save();
+    });
 
-    res.json({ status: true, evento });
+    res.json({
+      status: true,
+      evento
+    });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao criar evento'
@@ -517,12 +524,16 @@ app.post('/eventos', verifyToken, async (req, res) => {
   }
 });
 
-// Listar eventos (para calendário)
+
+// Listar eventos (calendário)
 app.get('/eventos', verifyToken, async (req, res) => {
   try {
-    const eventos = await Evento.find().sort({ data: 1 });
-    res.json({ status: true, eventos });
-  } catch {
+    const eventos = await Evento.find()
+      .sort({ data: 1 })
+      .lean();
+
+    res.json(eventos); // 👈 ARRAY DIRETO (ideal pro React)
+  } catch (error) {
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao buscar eventos'
@@ -530,17 +541,32 @@ app.get('/eventos', verifyToken, async (req, res) => {
   }
 });
 
+
 // Atualizar evento
 app.put('/eventos/:id', verifyToken, async (req, res) => {
   try {
+    const { titulo, descricao, data } = req.body;
+
+    const update = {
+      titulo,
+      descricao
+    };
+
+    if (data) {
+      update.data = data.split('T')[0]; // 👈 garante formato
+    }
+
     const evento = await Evento.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      update,
       { new: true }
     );
 
-    res.json({ status: true, evento });
-  } catch {
+    res.json({
+      status: true,
+      evento
+    });
+  } catch (error) {
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao atualizar evento'
@@ -548,12 +574,16 @@ app.put('/eventos/:id', verifyToken, async (req, res) => {
   }
 });
 
+
 // Deletar evento
 app.delete('/eventos/:id', verifyToken, async (req, res) => {
   try {
     await Evento.findByIdAndDelete(req.params.id);
-    res.json({ status: true, message: 'Evento removido' });
-  } catch {
+    res.json({
+      status: true,
+      message: 'Evento removido'
+    });
+  } catch (error) {
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao deletar evento'
