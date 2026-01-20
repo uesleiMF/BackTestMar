@@ -484,18 +484,23 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
     res.status(500).json({ status: false, errorMessage: 'Erro ao deletar casal simples' });
   }
 });
+
 /* ==============================
    EVENTOS / CALENDÁRIO
 ============================== */
 
-
-
-// 🔓 EVENTOS PÚBLICOS (SEM LOGIN)
+/**
+ * 🔓 LISTAR EVENTOS PÚBLICOS (SEM LOGIN)
+ * Usado pelo calendário para todos os usuários
+ */
 app.get('/eventos-publicos', async (req, res) => {
   try {
-    const eventos = await Evento.find().sort({ data: 1 });
-    res.json(eventos);
-  } catch {
+    const eventos = await Evento.find()
+      .sort({ data: 1 })
+      .lean();
+
+    res.json(eventos); // array direto
+  } catch (error) {
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao buscar eventos públicos'
@@ -504,10 +509,30 @@ app.get('/eventos-publicos', async (req, res) => {
 });
 
 
+/**
+ * 🔐 LISTAR EVENTOS (LOGADO)
+ * (opcional – se quiser painel administrativo)
+ */
+app.get('/eventos', verifyToken, async (req, res) => {
+  try {
+    const eventos = await Evento.find()
+      .sort({ data: 1 })
+      .lean();
+
+    res.json(eventos);
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao buscar eventos'
+    });
+  }
+});
 
 
-// Criar evento
-app.post('/eventos', verifyToken, async (req, res) => {
+/**
+ * 👑 CRIAR EVENTO (APENAS LÍDER)
+ */
+app.post('/eventos', verifyToken, onlyLeader, async (req, res) => {
   try {
     const { titulo, descricao, data } = req.body;
 
@@ -518,13 +543,10 @@ app.post('/eventos', verifyToken, async (req, res) => {
       });
     }
 
-    // 🔒 GARANTE FORMATO YYYY-MM-DD
-    const dataFormatada = data.split('T')[0];
-
     const evento = await Evento.create({
       titulo,
       descricao,
-      data: dataFormatada,
+      data: data.split('T')[0], // yyyy-mm-dd
       criadoPor: req.user.id
     });
 
@@ -534,7 +556,6 @@ app.post('/eventos', verifyToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       status: false,
       errorMessage: 'Erro ao criar evento'
@@ -543,25 +564,10 @@ app.post('/eventos', verifyToken, async (req, res) => {
 });
 
 
-// Listar eventos (calendário)
-app.get('/eventos', verifyToken, async (req, res) => {
-  try {
-    const eventos = await Evento.find()
-      .sort({ data: 1 })
-      .lean();
-
-    res.json(eventos); // 👈 ARRAY DIRETO (ideal pro React)
-  } catch (error) {
-    res.status(500).json({
-      status: false,
-      errorMessage: 'Erro ao buscar eventos'
-    });
-  }
-});
-
-
-// Atualizar evento
-app.put('/eventos/:id', verifyToken, async (req, res) => {
+/**
+ * ✏️ ATUALIZAR EVENTO (APENAS LÍDER)
+ */
+app.put('/eventos/:id', verifyToken, onlyLeader, async (req, res) => {
   try {
     const { titulo, descricao, data } = req.body;
 
@@ -571,7 +577,7 @@ app.put('/eventos/:id', verifyToken, async (req, res) => {
     };
 
     if (data) {
-      update.data = data.split('T')[0]; // 👈 garante formato
+      update.data = data.split('T')[0];
     }
 
     const evento = await Evento.findByIdAndUpdate(
@@ -584,6 +590,7 @@ app.put('/eventos/:id', verifyToken, async (req, res) => {
       status: true,
       evento
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -593,14 +600,18 @@ app.put('/eventos/:id', verifyToken, async (req, res) => {
 });
 
 
-// Deletar evento
-app.delete('/eventos/:id', verifyToken, async (req, res) => {
+/**
+ * 🗑️ DELETAR EVENTO (APENAS LÍDER)
+ */
+app.delete('/eventos/:id', verifyToken, onlyLeader, async (req, res) => {
   try {
     await Evento.findByIdAndDelete(req.params.id);
+
     res.json({
       status: true,
       message: 'Evento removido'
     });
+
   } catch (error) {
     res.status(500).json({
       status: false,
@@ -608,6 +619,141 @@ app.delete('/eventos/:id', verifyToken, async (req, res) => {
     });
   }
 });
+/* ==============================
+   EVENTOS / CALENDÁRIO
+============================== */
+
+/**
+ * 🔓 LISTAR EVENTOS PÚBLICOS (SEM LOGIN)
+ * Usado pelo calendário para todos os usuários
+ */
+app.get('/eventos-publicos', async (req, res) => {
+  try {
+    const eventos = await Evento.find()
+      .sort({ data: 1 })
+      .lean();
+
+    res.json(eventos); // array direto
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao buscar eventos públicos'
+    });
+  }
+});
+
+
+/**
+ * 🔐 LISTAR EVENTOS (LOGADO)
+ * (opcional – se quiser painel administrativo)
+ */
+app.get('/eventos', verifyToken, async (req, res) => {
+  try {
+    const eventos = await Evento.find()
+      .sort({ data: 1 })
+      .lean();
+
+    res.json(eventos);
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao buscar eventos'
+    });
+  }
+});
+
+
+/**
+ * 👑 CRIAR EVENTO (APENAS LÍDER)
+ */
+app.post('/eventos', verifyToken, onlyLeader, async (req, res) => {
+  try {
+    const { titulo, descricao, data } = req.body;
+
+    if (!titulo || !data) {
+      return res.status(400).json({
+        status: false,
+        errorMessage: 'Título e data são obrigatórios'
+      });
+    }
+
+    const evento = await Evento.create({
+      titulo,
+      descricao,
+      data: data.split('T')[0], // yyyy-mm-dd
+      criadoPor: req.user.id
+    });
+
+    res.json({
+      status: true,
+      evento
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao criar evento'
+    });
+  }
+});
+
+
+/**
+ * ✏️ ATUALIZAR EVENTO (APENAS LÍDER)
+ */
+app.put('/eventos/:id', verifyToken, onlyLeader, async (req, res) => {
+  try {
+    const { titulo, descricao, data } = req.body;
+
+    const update = {
+      titulo,
+      descricao
+    };
+
+    if (data) {
+      update.data = data.split('T')[0];
+    }
+
+    const evento = await Evento.findByIdAndUpdate(
+      req.params.id,
+      update,
+      { new: true }
+    );
+
+    res.json({
+      status: true,
+      evento
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao atualizar evento'
+    });
+  }
+});
+
+
+/**
+ * 🗑️ DELETAR EVENTO (APENAS LÍDER)
+ */
+app.delete('/eventos/:id', verifyToken, onlyLeader, async (req, res) => {
+  try {
+    await Evento.findByIdAndDelete(req.params.id);
+
+    res.json({
+      status: true,
+      message: 'Evento removido'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      errorMessage: 'Erro ao deletar evento'
+    });
+  }
+});
+
 
 
 // ----------------------------
