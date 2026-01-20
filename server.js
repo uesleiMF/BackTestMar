@@ -485,6 +485,7 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
   }
 });
 
+
 /* ==============================
    EVENTOS / CALENDÁRIO
 ============================== */
