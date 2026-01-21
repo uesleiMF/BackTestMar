@@ -486,18 +486,18 @@ app.delete('/delete-casal-simple/:id', verifyToken, async (req, res) => {
 });
 
 
+
 /* ==============================
    EVENTOS / CALENDÁRIO
 ============================== */
-
 
 // 🔓 LISTAR EVENTOS (PÚBLICO)
 app.get("/eventos", async (req, res) => {
   try {
     const eventos = await Evento.find().sort({ data: 1 });
     res.json(eventos);
-  } catch (err) {
-    res.status(500).json({ error: "Erro ao buscar eventos" });
+  } catch {
+    res.status(500).json({ errorMessage: "Erro ao buscar eventos" });
   }
 });
 
@@ -507,38 +507,45 @@ app.post("/eventos", verifyToken, async (req, res) => {
     const { titulo, descricao, data } = req.body;
 
     if (!titulo || !data) {
-      return res.status(400).json({ error: "Título e data são obrigatórios" });
+      return res.status(400).json({
+        errorMessage: "Título e data são obrigatórios",
+      });
     }
 
-    const evento = await Evento.create({
+    const evento = new Evento({
       titulo,
       descricao,
-      data: new Date(data),
+      data, // ✅ STRING YYYY-MM-DD
       criadoPor: req.user.id,
     });
 
+    await evento.save();
+
     res.status(201).json(evento);
   } catch (err) {
-    res.status(400).json({ error: "Erro ao criar evento" });
+    console.error(err);
+    res.status(500).json({
+      errorMessage: "Erro ao criar evento",
+    });
   }
 });
 
 // ✏️ EDITAR EVENTO (APENAS LÍDER)
 app.put("/eventos/:id", verifyToken, onlyLeader, async (req, res) => {
   try {
+    const { titulo, descricao, data } = req.body;
+
     const evento = await Evento.findByIdAndUpdate(
       req.params.id,
-      {
-        titulo: req.body.titulo,
-        descricao: req.body.descricao,
-        data: new Date(req.body.data),
-      },
+      { titulo, descricao, data },
       { new: true }
     );
 
     res.json(evento);
   } catch {
-    res.status(400).json({ error: "Erro ao editar evento" });
+    res.status(400).json({
+      errorMessage: "Erro ao editar evento",
+    });
   }
 });
 
@@ -548,7 +555,9 @@ app.delete("/eventos/:id", verifyToken, onlyLeader, async (req, res) => {
     await Evento.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch {
-    res.status(400).json({ error: "Erro ao excluir evento" });
+    res.status(400).json({
+      errorMessage: "Erro ao excluir evento",
+    });
   }
 });
 
